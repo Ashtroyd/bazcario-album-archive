@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #09090b; /* zinc-950 */
+  --foreground: #fafafa; /* zinc-50 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-zinc-800 bg-zinc-900/60 p-5;
+  }
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-violet-600 text-white hover:bg-violet-500;
+  }
+  .btn-ghost {
+    @apply text-zinc-300 hover:bg-zinc-800 hover:text-white;
+  }
+  .btn-outline {
+    @apply border border-zinc-700 text-zinc-200 hover:bg-zinc-800;
+  }
+  .btn-danger {
+    @apply text-red-400 hover:bg-red-950/40 hover:text-red-300;
+  }
+  .input {
+    @apply w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium tracking-wide text-zinc-400 uppercase;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-0.5 text-xs text-zinc-300;
+  }
+}
