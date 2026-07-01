@@ -20,10 +20,10 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-xl border border-zinc-800 bg-zinc-900/60 p-5;
+    @apply rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 transition;
   }
   .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
     @apply bg-violet-600 text-white hover:bg-violet-500;
@@ -45,5 +45,26 @@ body {
   }
   .chip {
     @apply inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-0.5 text-xs text-zinc-300;
+  }
+}
+
+/* Page-transition entrance (applied per navigation via app/(app)/template.tsx) */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-page-in {
+  animation: page-in 0.28s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in {
+    animation: none;
   }
 }

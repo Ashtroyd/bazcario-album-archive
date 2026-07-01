@@ -13,13 +13,13 @@ export function AlbumCard({
   return (
     <Link
       href={`/album/${album.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 transition hover:border-zinc-600"
+      className="group flex flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-600 hover:shadow-lg hover:shadow-black/30"
     >
       <div className="relative aspect-square w-full">
         <CoverImage
           url={album.cover_image_url}
           alt={`${album.title} cover`}
-          className="h-full w-full transition group-hover:opacity-90"
+          className="h-full w-full transition duration-300 group-hover:scale-[1.04]"
         />
         {myScore != null && (
           <span className="absolute top-2 right-2 rounded-lg bg-black/70 px-2 py-1 text-sm backdrop-blur">
