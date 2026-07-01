@@ -21,6 +21,7 @@ import * as XLSX from "xlsx";
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fetchCoverArt } from "../src/lib/coverart";
+import { extractColors } from "../src/lib/palette";
 
 loadEnv({ path: resolve(process.cwd(), ".env.local") });
 
@@ -471,6 +472,7 @@ async function upsertAlbum(db: DB, a: ParsedAlbum, ownerId: string): Promise<str
     );
   }
 
+  let albumId: string;
   if (existing) {
     await db
       .from("albums")
@@ -480,22 +482,33 @@ async function upsertAlbum(db: DB, a: ParsedAlbum, ownerId: string): Promise<str
         cover_image_url: cover,
       })
       .eq("id", existing.id);
-    return existing.id as string;
+    albumId = existing.id as string;
+  } else {
+    const { data, error } = await db
+      .from("albums")
+      .insert({
+        title: a.title,
+        artist: a.artist,
+        release_year: a.release_year,
+        genre: a.genre,
+        cover_image_url: cover,
+        created_by: ownerId,
+      })
+      .select("id")
+      .single();
+    if (error || !data)
+      throw error ?? new Error(`Failed to insert album ${a.title}`);
+    albumId = data.id as string;
   }
-  const { data, error } = await db
-    .from("albums")
-    .insert({
-      title: a.title,
-      artist: a.artist,
-      release_year: a.release_year,
-      genre: a.genre,
-      cover_image_url: cover,
-      created_by: ownerId,
-    })
-    .select("id")
-    .single();
-  if (error || !data) throw error ?? new Error(`Failed to insert album ${a.title}`);
-  return data.id as string;
+
+  // Best-effort: cache the cover color palette (skipped if the column is absent).
+  if (cover) {
+    const colors = await extractColors(cover);
+    if (colors) {
+      await db.from("albums").update({ cover_colors: colors }).eq("id", albumId);
+    }
+  }
+  return albumId;
 }
 
 async function upsertTrack(db: DB, albumId: string, t: ParsedTrack): Promise<string> {

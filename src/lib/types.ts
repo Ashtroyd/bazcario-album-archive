@@ -5,6 +5,9 @@ export type ReplayValue = "Low" | "Medium" | "High" | "Very High";
 export type FriendStatus = "pending" | "accepted";
 export type CommentTarget = "album" | "track" | "rating";
 
+/** Cover-art-derived palette used to tint the album page. */
+export type CoverColors = { bg: string; accent: string; text: string };
+
 export const REPLAY_VALUES: ReplayValue[] = [
   "Low",
   "Medium",
@@ -28,6 +31,7 @@ export interface Album {
   release_year: number | null;
   genre: string | null;
   cover_image_url: string | null;
+  cover_colors: CoverColors | null;
   created_by: string;
   created_at: string;
 }

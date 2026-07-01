@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchCoverArt } from "@/lib/coverart";
+import { extractColors } from "@/lib/palette";
 
 /** Look up cover art (used by the add-album form's "Fetch cover" button). */
 export async function lookupCover(
@@ -76,6 +77,17 @@ export async function createAlbum(formData: FormData) {
     await supabase.from("tracks").insert(rows);
   }
 
+  // Best-effort: cache a cover-derived color palette for the album page.
+  if (cover_image_url) {
+    const colors = await extractColors(cover_image_url);
+    if (colors) {
+      await supabase
+        .from("albums")
+        .update({ cover_colors: colors })
+        .eq("id", album.id);
+    }
+  }
+
   revalidatePath("/albums");
   redirect(`/album/${album.id}`);
 }
@@ -111,6 +123,14 @@ export async function updateAlbumCover(formData: FormData) {
       .from("albums")
       .update({ cover_image_url })
       .eq("id", albumId);
+    // Recompute the palette for the new cover (best-effort, separate update).
+    const colors = await extractColors(cover_image_url);
+    if (colors) {
+      await supabase
+        .from("albums")
+        .update({ cover_colors: colors })
+        .eq("id", albumId);
+    }
   }
   revalidatePath(`/album/${albumId}`);
 }
