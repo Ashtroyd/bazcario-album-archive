@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
+import { BottomNav } from "@/components/BottomNav";
 import { createClient } from "@/lib/supabase/server";
 import { getUnreadCount } from "@/lib/notifications";
 import type { Profile } from "@/lib/types";
@@ -34,7 +35,10 @@ export default async function AppLayout({
         }}
         unreadCount={unreadCount}
       />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-24 sm:pb-6">
+        {children}
+      </main>
+      <BottomNav unreadCount={unreadCount} />
     </div>
   );
 }

@@ -12,10 +12,25 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  /* Visible flash when tapping links/buttons on touch devices. */
+  -webkit-tap-highlight-color: rgba(139, 92, 246, 0.18);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Press feedback on touch devices (no hover to rely on). */
+@media (hover: none) {
+  a:active,
+  button:active,
+  [role="button"]:active,
+  label:active {
+    opacity: 0.55;
+  }
 }
 
 @layer components {

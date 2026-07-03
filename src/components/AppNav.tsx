@@ -30,7 +30,7 @@ export function AppNav({
           🎧 <span className="hidden sm:inline">Archive</span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="hidden items-center gap-1 sm:flex">
           {LINKS.map((l) => (
             <Link
               key={l.href}
@@ -48,7 +48,10 @@ export function AppNav({
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/album/new" className="btn btn-primary px-3 py-1.5">
+          <Link
+            href="/album/new"
+            className="hidden btn btn-primary px-3 py-1.5 sm:inline-flex"
+          >
             <span className="text-base leading-none">+</span>
             <span className="hidden sm:inline">Add album</span>
           </Link>
@@ -56,7 +59,7 @@ export function AppNav({
             href="/notifications"
             title="Notifications"
             className={cn(
-              "relative rounded-lg px-2 py-1.5 transition",
+              "relative hidden rounded-lg px-2 py-1.5 transition sm:inline-flex",
               isActive("/notifications")
                 ? "bg-zinc-800 text-white"
                 : "text-zinc-300 hover:bg-zinc-800 hover:text-white",
@@ -72,14 +75,13 @@ export function AppNav({
           <Link
             href="/profile"
             title="Profile"
-            className="rounded-full ring-zinc-700 transition hover:ring-2"
+            className="rounded-full ring-2 ring-zinc-700 transition hover:ring-violet-500"
           >
-            <Avatar url={profile.avatar_url} name={profile.display_name} size={32} />
+            <Avatar url={profile.avatar_url} name={profile.display_name} size={34} />
           </Link>
-          <form action={signout}>
+          <form action={signout} className="hidden sm:block">
             <button type="submit" className="btn btn-ghost px-3 py-1.5">
-              <span className="hidden sm:inline">Sign out</span>
-              <span className="sm:hidden">↩</span>
+              Sign out
             </button>
           </form>
         </div>

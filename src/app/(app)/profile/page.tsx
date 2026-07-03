@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { updateProfile } from "@/app/actions/profile";
+import { signout } from "@/app/actions/auth";
 import { Avatar } from "@/components/Avatar";
 import { cn, formatScore } from "@/lib/utils";
 
@@ -111,7 +112,14 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Profile</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Profile</h1>
+        <form action={signout}>
+          <button type="submit" className="btn btn-outline text-sm">
+            Sign out
+          </button>
+        </form>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
         {/* Settings */}
