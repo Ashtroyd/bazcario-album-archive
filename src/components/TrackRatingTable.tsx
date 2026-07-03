@@ -100,6 +100,12 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
 
       {/* Replay buttons + exact value */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
+        <span
+          className="text-[10px] tracking-wide text-zinc-500 uppercase"
+          title="Replay value — how often you'd come back to this track"
+        >
+          Replay
+        </span>
         <div className="inline-flex overflow-hidden rounded-lg border border-zinc-700">
           {REPLAY_VALUES.map((rv) => (
             <button

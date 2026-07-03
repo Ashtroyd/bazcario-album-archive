@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/Avatar";
 import { AlbumCard } from "@/components/AlbumCard";
-import { formatScore } from "@/lib/utils";
+import { cn, formatScore } from "@/lib/utils";
+import { computeTasteMatch, matchColor } from "@/lib/tasteMatch";
 import type { Album, Profile } from "@/lib/types";
 
 export default async function FriendProfilePage({
@@ -54,6 +55,58 @@ export default async function FriendProfilePage({
     ? scored.reduce((a, b) => a + b, 0) / scored.length
     : null;
 
+  // Taste-match + shared-album stats.
+  const { data: myRatingsData } = await supabase
+    .from("ratings")
+    .select("album_id, overall_rating")
+    .eq("user_id", user!.id);
+  const myOverall = new Map<string, number>();
+  for (const r of myRatingsData ?? [])
+    if (r.overall_rating != null)
+      myOverall.set(r.album_id, Number(r.overall_rating));
+
+  const sharedAlbums = rated.filter((r) => myOverall.has(r.album!.id));
+  let biggestSplit: {
+    title: string;
+    mine: number;
+    theirs: number;
+    diff: number;
+  } | null = null;
+  for (const r of sharedAlbums) {
+    const mineS = myOverall.get(r.album!.id)!;
+    const theirsS = r.overall_rating != null ? Number(r.overall_rating) : null;
+    if (theirsS == null) continue;
+    const diff = Math.abs(mineS - theirsS);
+    if (!biggestSplit || diff > biggestSplit.diff)
+      biggestSplit = {
+        title: r.album!.title,
+        mine: mineS,
+        theirs: theirsS,
+        diff,
+      };
+  }
+
+  let taste: { matchPct: number | null; sharedTracks: number } = {
+    matchPct: null,
+    sharedTracks: 0,
+  };
+  if (areFriends) {
+    const [{ data: myTR }, { data: theirTR }] = await Promise.all([
+      supabase
+        .from("track_ratings")
+        .select("track_id, rating")
+        .eq("user_id", user!.id),
+      supabase.from("track_ratings").select("track_id, rating").eq("user_id", id),
+    ]);
+    const myMap = new Map<string, number>(
+      (myTR ?? []).map((r) => [r.track_id as string, Number(r.rating)]),
+    );
+    const theirMap = new Map<string, number>(
+      (theirTR ?? []).map((r) => [r.track_id as string, Number(r.rating)]),
+    );
+    taste = computeTasteMatch(myMap, theirMap);
+  }
+
   return (
     <div className="space-y-6">
       <Link href="/friends" className="text-sm text-zinc-400 hover:underline">
@@ -72,6 +125,38 @@ export default async function FriendProfilePage({
           </p>
         </div>
       </div>
+
+      {areFriends && (taste.matchPct != null || sharedAlbums.length > 0) && (
+        <div className="card flex flex-wrap items-center gap-x-8 gap-y-3">
+          {taste.matchPct != null && (
+            <div>
+              <div
+                className={cn("text-3xl font-bold", matchColor(taste.matchPct))}
+              >
+                {taste.matchPct}%
+              </div>
+              <div className="text-[10px] tracking-wide text-zinc-500 uppercase">
+                Taste match · {taste.sharedTracks} shared track
+                {taste.sharedTracks === 1 ? "" : "s"}
+              </div>
+            </div>
+          )}
+          <div className="space-y-0.5 text-sm text-zinc-400">
+            <div>
+              {sharedAlbums.length} shared album
+              {sharedAlbums.length === 1 ? "" : "s"}
+            </div>
+            {biggestSplit && biggestSplit.diff > 0 && (
+              <div>
+                Biggest split:{" "}
+                <span className="text-zinc-200">{biggestSplit.title}</span> (
+                {formatScore(biggestSplit.mine)} vs{" "}
+                {formatScore(biggestSplit.theirs)})
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {!areFriends ? (
         <div className="card text-sm text-zinc-400">

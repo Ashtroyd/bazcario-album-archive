@@ -126,6 +126,18 @@ export default async function ComparePage({
   const friendName = friendProfile?.display_name ?? "Friend";
   const theyHaveData = (theirsTR ?? []).length > 0 || frRating != null;
 
+  // Taste match on this album, from shared track ratings.
+  let matchSum = 0;
+  let matchN = 0;
+  for (const r of trackRows) {
+    if (r.mine?.rating != null && r.theirs?.rating != null) {
+      matchSum += Math.abs(r.mine.rating - r.theirs.rating);
+      matchN += 1;
+    }
+  }
+  const albumMatch =
+    matchN > 0 ? Math.round(100 * (1 - matchSum / matchN / 10)) : null;
+
   const colors = (a.cover_colors as CoverColors | null) ?? null;
   const bg = colors?.bg ?? "#18181b";
   const heroText = colors?.text ?? "#ffffff";
@@ -165,6 +177,14 @@ export default async function ComparePage({
             >
               Your ratings vs {friendName}
             </p>
+            {albumMatch != null && (
+              <p
+                className="mt-0.5 text-xs font-semibold"
+                style={{ color: accent }}
+              >
+                {albumMatch}% taste match on this album
+              </p>
+            )}
           </div>
         </div>
       </div>
