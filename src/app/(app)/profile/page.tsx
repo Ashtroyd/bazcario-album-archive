@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { Avatar } from "@/components/Avatar";
-import { formatScore } from "@/lib/utils";
+import { cn, formatScore } from "@/lib/utils";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -11,30 +11,90 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: ratings } = await supabase
+  const { data: ratingsData } = await supabase
     .from("ratings")
-    .select("overall_rating, albums(genre)")
+    .select("overall_rating, albums(id, title, genre)")
     .eq("user_id", user!.id);
-
-  const rated = (ratings ?? []) as unknown as {
+  const rated = (ratingsData ?? []) as unknown as {
     overall_rating: number | null;
-    albums: { genre: string | null } | null;
+    albums: { id: string; title: string; genre: string | null } | null;
   }[];
-  const scored = rated
+  const ratedAlbums = rated.filter((r) => r.albums);
+
+  const { data: trData } = await supabase
+    .from("track_ratings")
+    .select("rating, tracks(name, albums(title))")
+    .eq("user_id", user!.id);
+  const trackRatings = (trData ?? []) as unknown as {
+    rating: number | string;
+    tracks: { name: string; albums: { title: string } | null } | null;
+  }[];
+
+  // ---- Aggregate stats ----
+  const overalls = ratedAlbums
     .map((r) => r.overall_rating)
     .filter((n): n is number => n != null)
     .map(Number);
-  const avg = scored.length
-    ? scored.reduce((a, b) => a + b, 0) / scored.length
+  const avgOverall = overalls.length
+    ? overalls.reduce((a, b) => a + b, 0) / overalls.length
     : null;
 
+  let topAlbum: { title: string; score: number } | null = null;
+  for (const r of ratedAlbums) {
+    const s = r.overall_rating != null ? Number(r.overall_rating) : null;
+    if (s != null && (!topAlbum || s > topAlbum.score))
+      topAlbum = { title: r.albums!.title, score: s };
+  }
+
   const genreCount: Record<string, number> = {};
-  for (const r of rated) {
-    const g = r.albums?.genre;
+  for (const r of ratedAlbums) {
+    const g = r.albums!.genre;
     if (g) genreCount[g] = (genreCount[g] || 0) + 1;
   }
-  const topGenre =
-    Object.entries(genreCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+  const topGenres = Object.entries(genreCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([label, value]) => ({ label, value }));
+
+  const trackScores = trackRatings
+    .map((t) => Number(t.rating))
+    .filter((n) => Number.isFinite(n));
+  const avgTrack = trackScores.length
+    ? trackScores.reduce((a, b) => a + b, 0) / trackScores.length
+    : null;
+
+  const ranges = [
+    { label: "9–10", min: 9, max: 10.001 },
+    { label: "8–9", min: 8, max: 9 },
+    { label: "7–8", min: 7, max: 8 },
+    { label: "6–7", min: 6, max: 7 },
+    { label: "< 6", min: -1, max: 6 },
+  ];
+  const distribution = ranges.map((b) => ({
+    label: b.label,
+    value: trackScores.filter((s) => s >= b.min && s < b.max).length,
+  }));
+
+  let topTrack: { name: string; album: string | null; score: number } | null =
+    null;
+  for (const t of trackRatings) {
+    const s = Number(t.rating);
+    if (Number.isFinite(s) && (!topTrack || s > topTrack.score))
+      topTrack = {
+        name: t.tracks?.name ?? "?",
+        album: t.tracks?.albums?.title ?? null,
+        score: s,
+      };
+  }
+
+  const personality =
+    avgTrack == null
+      ? null
+      : avgTrack >= 8.5
+        ? "Generous 💛"
+        : avgTrack >= 7
+          ? "Balanced ⚖️"
+          : "Critical 🔍";
 
   const { count: friendCount } = await supabase
     .from("friendships")
@@ -43,9 +103,9 @@ export default async function ProfilePage() {
     .eq("status", "accepted");
 
   const stats = [
-    { label: "Albums rated", value: String(rated.length) },
-    { label: "Average rating", value: formatScore(avg) },
-    { label: "Top genre", value: topGenre },
+    { label: "Albums rated", value: String(ratedAlbums.length) },
+    { label: "Tracks rated", value: String(trackScores.length) },
+    { label: "Avg rating", value: formatScore(avgOverall) },
     { label: "Friends", value: String(friendCount ?? 0) },
   ];
 
@@ -113,20 +173,117 @@ export default async function ProfilePage() {
           </button>
         </form>
 
-        {/* Stats */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {stats.map((s) => (
-              <div key={s.label} className="card">
-                <div className="text-xs tracking-wide text-zinc-400 uppercase">
-                  {s.label}
-                </div>
-                <div className="mt-1 text-2xl font-bold">{s.value}</div>
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 gap-4 self-start">
+          {stats.map((s) => (
+            <div key={s.label} className="card">
+              <div className="text-xs tracking-wide text-zinc-400 uppercase">
+                {s.label}
               </div>
-            ))}
-          </div>
+              <div className="mt-1 text-2xl font-bold">{s.value}</div>
+            </div>
+          ))}
         </div>
       </div>
+
+      {ratedAlbums.length > 0 && (
+        <>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="card">
+              <h2 className="mb-3 text-sm font-semibold">
+                Your rating distribution
+              </h2>
+              {trackScores.length > 0 ? (
+                <Bars data={distribution} colorClass="bg-violet-600" />
+              ) : (
+                <p className="text-sm text-zinc-500">
+                  Rate some tracks to see this.
+                </p>
+              )}
+            </div>
+            <div className="card">
+              <h2 className="mb-3 text-sm font-semibold">Top genres</h2>
+              {topGenres.length > 0 ? (
+                <Bars data={topGenres} colorClass="bg-emerald-600" />
+              ) : (
+                <p className="text-sm text-zinc-500">No genres yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Highlight
+              label="Highest-rated album"
+              value={topAlbum?.title ?? "—"}
+              sub={topAlbum ? formatScore(topAlbum.score) : undefined}
+            />
+            <Highlight
+              label="Favourite track"
+              value={topTrack?.name ?? "—"}
+              sub={
+                topTrack
+                  ? `${formatScore(topTrack.score)}${topTrack.album ? ` · ${topTrack.album}` : ""}`
+                  : undefined
+              }
+            />
+            <Highlight
+              label="Rating style"
+              value={personality ?? "—"}
+              sub={avgTrack != null ? `avg track ${formatScore(avgTrack)}` : undefined}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Bars({
+  data,
+  colorClass = "bg-violet-600",
+}: {
+  data: { label: string; value: number }[];
+  colorClass?: string;
+}) {
+  const max = Math.max(1, ...data.map((d) => d.value));
+  return (
+    <div className="space-y-1.5">
+      {data.map((d) => (
+        <div key={d.label} className="flex items-center gap-2 text-xs">
+          <span className="w-14 shrink-0 truncate text-right text-zinc-400">
+            {d.label}
+          </span>
+          <div className="h-4 flex-1 overflow-hidden rounded bg-zinc-800/60">
+            <div
+              className={cn("h-full rounded", colorClass)}
+              style={{ width: `${(d.value / max) * 100}%` }}
+            />
+          </div>
+          <span className="w-6 shrink-0 text-zinc-500">{d.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Highlight({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="card">
+      <div className="text-[10px] tracking-wide text-zinc-500 uppercase">
+        {label}
+      </div>
+      <div className="mt-1 truncate font-semibold" title={value}>
+        {value}
+      </div>
+      {sub && <div className="text-xs text-zinc-500">{sub}</div>}
     </div>
   );
 }
