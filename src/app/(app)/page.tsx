@@ -2,8 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { AlbumCard } from "@/components/AlbumCard";
-import { Avatar } from "@/components/Avatar";
-import { ScoreBadge } from "@/components/ScoreBadge";
+import { ActivityFeed } from "@/components/ActivityFeed";
+import { getFriendActivity } from "@/lib/activity";
 import type { Album } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -25,21 +25,16 @@ export default async function DashboardPage() {
   }[];
   const myAlbums = mine.filter((r) => r.album);
 
-  const { data: actData } = await supabase
-    .from("ratings")
-    .select(
-      "user_id, overall_rating, updated_at, album:albums(id,title,artist,cover_image_url), rater:profiles(display_name, avatar_url)",
-    )
-    .neq("user_id", user!.id)
-    .order("updated_at", { ascending: false })
-    .limit(12);
-  const activity = (actData ?? []) as unknown as {
-    user_id: string;
-    overall_rating: number | null;
-    album: { id: string; title: string } | null;
-    rater: { display_name: string | null; avatar_url: string | null } | null;
-  }[];
-  const acts = activity.filter((a) => a.album);
+  const { data: fr } = await supabase
+    .from("friendships")
+    .select("user_id, friend_id")
+    .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`)
+    .eq("status", "accepted");
+  const friendIds = (fr ?? []).map((f) =>
+    f.user_id === user!.id ? f.friend_id : f.user_id,
+  ) as string[];
+
+  const activity = await getFriendActivity(supabase, user!.id, friendIds);
 
   return (
     <div className="space-y-8">
@@ -80,48 +75,8 @@ export default async function DashboardPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Friends&apos; recent ratings</h2>
-        {acts.length === 0 ? (
-          <div className="card text-sm text-zinc-400">
-            No friend activity yet.{" "}
-            <Link href="/friends" className="text-violet-400 hover:underline">
-              Add friends →
-            </Link>
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {acts.map((a, i) => (
-              <li key={i}>
-                <Link
-                  href={`/album/${a.album!.id}`}
-                  className="card flex items-center gap-3 py-3 transition hover:border-zinc-700"
-                >
-                  <Avatar
-                    url={a.rater?.avatar_url}
-                    name={a.rater?.display_name}
-                    size={32}
-                  />
-                  <span className="text-sm">
-                    <span className="font-medium">
-                      {a.rater?.display_name ?? "A friend"}
-                    </span>{" "}
-                    rated{" "}
-                    <span className="font-medium">{a.album!.title}</span>
-                  </span>
-                  <span className="ml-auto">
-                    <ScoreBadge
-                      score={
-                        a.overall_rating != null
-                          ? Number(a.overall_rating)
-                          : null
-                      }
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <h2 className="text-lg font-semibold">Activity</h2>
+        <ActivityFeed items={activity} />
       </section>
     </div>
   );
