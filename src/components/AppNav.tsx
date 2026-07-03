@@ -14,8 +14,10 @@ const LINKS = [
 
 export function AppNav({
   profile,
+  unreadCount,
 }: {
   profile: { display_name: string | null; avatar_url: string | null };
+  unreadCount: number;
 }) {
   const pathname = usePathname();
   const isActive = (href: string) =>
@@ -49,6 +51,23 @@ export function AppNav({
           <Link href="/album/new" className="btn btn-primary px-3 py-1.5">
             <span className="text-base leading-none">+</span>
             <span className="hidden sm:inline">Add album</span>
+          </Link>
+          <Link
+            href="/notifications"
+            title="Notifications"
+            className={cn(
+              "relative rounded-lg px-2 py-1.5 transition",
+              isActive("/notifications")
+                ? "bg-zinc-800 text-white"
+                : "text-zinc-300 hover:bg-zinc-800 hover:text-white",
+            )}
+          >
+            <span className="text-lg leading-none">🔔</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </Link>
           <Link
             href="/profile"
