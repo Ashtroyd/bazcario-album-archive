@@ -71,6 +71,35 @@ export default async function AlbumDetailPage({
   }
   const trMap = new Map(myTrackRatings.map((tr) => [tr.track_id, tr]));
 
+  // Friends' per-track scores (RLS returns only accepted friends / public).
+  type FriendTR = {
+    track_id: string;
+    rating: number | string;
+    profiles: { display_name: string | null; avatar_url: string | null } | null;
+  };
+  let friendTrackRatings: FriendTR[] = [];
+  if (trackIds.length > 0) {
+    const { data } = await supabase
+      .from("track_ratings")
+      .select("track_id, rating, profiles(display_name, avatar_url)")
+      .in("track_id", trackIds)
+      .neq("user_id", user!.id);
+    friendTrackRatings = (data ?? []) as unknown as FriendTR[];
+  }
+  const friendScoreMap = new Map<
+    string,
+    { name: string | null; avatar: string | null; score: number }[]
+  >();
+  for (const ftr of friendTrackRatings) {
+    const arr = friendScoreMap.get(ftr.track_id) ?? [];
+    arr.push({
+      name: ftr.profiles?.display_name ?? null,
+      avatar: ftr.profiles?.avatar_url ?? null,
+      score: Number(ftr.rating),
+    });
+    friendScoreMap.set(ftr.track_id, arr);
+  }
+
   const { data: othersData } = await supabase
     .from("ratings")
     .select("user_id, overall_rating, profiles(display_name, avatar_url)")
@@ -87,6 +116,7 @@ export default async function AlbumDetailPage({
       rating: tr?.rating != null ? Number(tr.rating) : null,
       replay: (tr?.replay_value ?? null) as ReplayValue | null,
       notes: tr?.notes ?? null,
+      friends: friendScoreMap.get(t.id) ?? [],
     };
   });
 

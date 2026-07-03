@@ -85,8 +85,12 @@ export default async function NotificationsPage() {
             Recent
           </h2>
           <ul className="space-y-2">
-            {items.map((n) => (
-              <li key={n.id}>
+            {items.map((n, i) => (
+              <li
+                key={n.id}
+                className="list-in"
+                style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
+              >
                 <Link
                   href={
                     n.kind === "compare" && n.album

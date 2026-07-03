@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { saveTrackRating } from "@/app/actions/ratings";
+import { Avatar } from "@/components/Avatar";
 import { REPLAY_VALUES, type ReplayValue } from "@/lib/types";
-import { cn, scoreColor } from "@/lib/utils";
+import { cn, formatScore, scoreColor } from "@/lib/utils";
+
+type FriendScore = { name: string | null; avatar: string | null; score: number };
 
 type Row = {
   id: string;
@@ -12,10 +15,15 @@ type Row = {
   rating: number | null;
   replay: ReplayValue | null;
   notes: string | null;
+  friends: FriendScore[];
 };
 
-const inputBase =
-  "rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm outline-none focus:border-violet-500";
+const SHORT: Record<ReplayValue, string> = {
+  Low: "Low",
+  Medium: "Med",
+  High: "High",
+  "Very High": "V.High",
+};
 
 export function TrackRatingTable({
   albumId,
@@ -25,23 +33,10 @@ export function TrackRatingTable({
   tracks: Row[];
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-zinc-800 text-left text-xs tracking-wide text-zinc-500 uppercase">
-            <th className="w-8 py-2 font-medium">#</th>
-            <th className="py-2 font-medium">Song</th>
-            <th className="w-24 py-2 font-medium">Rating</th>
-            <th className="w-36 py-2 font-medium">Replay</th>
-            <th className="py-2 font-medium">Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tracks.map((t) => (
-            <TrackRow key={t.id} albumId={albumId} track={t} />
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-2">
+      {tracks.map((t) => (
+        <TrackRow key={t.id} albumId={albumId} track={t} />
+      ))}
     </div>
   );
 }
@@ -50,7 +45,7 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
   const [rating, setRating] = useState(
     track.rating != null ? String(track.rating) : "",
   );
-  const [replay, setReplay] = useState<string>(track.replay ?? "");
+  const [replay, setReplay] = useState<ReplayValue | "">(track.replay ?? "");
   const [notes, setNotes] = useState(track.notes ?? "");
   const [, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -72,10 +67,61 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
   const num = rating === "" ? null : Number(rating);
 
   return (
-    <tr className="border-b border-zinc-900">
-      <td className="py-1.5 text-zinc-500">{track.order}</td>
-      <td className="py-1.5 pr-2 font-medium">{track.name}</td>
-      <td className="py-1.5">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 transition sm:p-4">
+      {/* Track + big score */}
+      <div className="flex items-center gap-3">
+        <span className="w-5 shrink-0 text-right text-xs text-zinc-500">
+          {track.order}
+        </span>
+        <span className="min-w-0 flex-1 truncate font-medium">{track.name}</span>
+        <span
+          className={cn(
+            "w-14 shrink-0 text-right text-2xl font-bold tabular-nums",
+            scoreColor(num),
+          )}
+        >
+          {num != null ? formatScore(num) : "–"}
+        </span>
+      </div>
+
+      {/* Quick-set slider */}
+      <input
+        type="range"
+        min={0}
+        max={10}
+        step={0.1}
+        value={num ?? 0}
+        onChange={(e) => setRating(e.target.value)}
+        onPointerUp={() => persist({})}
+        onKeyUp={() => persist({})}
+        aria-label={`Rating for ${track.name}`}
+        className="mt-3 w-full accent-violet-500"
+      />
+
+      {/* Replay buttons + exact value */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="inline-flex overflow-hidden rounded-lg border border-zinc-700">
+          {REPLAY_VALUES.map((rv) => (
+            <button
+              key={rv}
+              type="button"
+              onClick={() => {
+                const next = replay === rv ? "" : rv;
+                setReplay(next);
+                persist({ replay: next });
+              }}
+              className={cn(
+                "px-2.5 py-1 text-xs transition",
+                replay === rv
+                  ? "bg-violet-600 text-white"
+                  : "text-zinc-400 hover:bg-zinc-800",
+              )}
+            >
+              {SHORT[rv]}
+            </button>
+          ))}
+        </div>
+
         <input
           type="number"
           min={0}
@@ -85,45 +131,67 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
           onChange={(e) => setRating(e.target.value)}
           onBlur={() => persist({})}
           placeholder="–"
-          className={cn(inputBase, "w-20 text-center font-semibold", scoreColor(num))}
+          aria-label="Exact rating"
+          className="w-16 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-center text-sm outline-none focus:border-violet-500"
         />
-      </td>
-      <td className="py-1.5">
-        <select
-          value={replay}
-          onChange={(e) => {
-            setReplay(e.target.value);
-            persist({ replay: e.target.value });
-          }}
-          className={cn(inputBase, "w-32")}
-        >
-          <option value="">—</option>
-          {REPLAY_VALUES.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-      </td>
-      <td className="py-1.5">
-        <div className="flex items-center gap-2">
-          <input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            onBlur={() => persist({})}
-            placeholder="Add a note…"
-            className={cn(inputBase, "w-full")}
-          />
-          <span
-            className={cn(
-              "text-xs whitespace-nowrap text-emerald-500 transition-opacity",
-              saved ? "opacity-100" : "opacity-0",
-            )}
+
+        {rating !== "" && (
+          <button
+            type="button"
+            onClick={() => {
+              setRating("");
+              persist({ rating: "" });
+            }}
+            className="text-xs text-zinc-500 hover:text-red-400"
           >
-            ✓ saved
+            clear
+          </button>
+        )}
+
+        <span
+          className={cn(
+            "ml-auto text-xs whitespace-nowrap text-emerald-500 transition-opacity",
+            saved ? "opacity-100" : "opacity-0",
+          )}
+        >
+          ✓ saved
+        </span>
+      </div>
+
+      {/* Notes */}
+      <input
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        onBlur={() => persist({})}
+        placeholder="Add a note…"
+        className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm outline-none focus:border-violet-500"
+      />
+
+      {/* Friends' scores for this track */}
+      {track.friends.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-[10px] tracking-wide text-zinc-500 uppercase">
+            Friends
           </span>
+          {track.friends.map((f, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 rounded-full border border-zinc-700 bg-zinc-800/60 px-1.5 py-0.5"
+              title={f.name ?? "Friend"}
+            >
+              <Avatar url={f.avatar} name={f.name} size={16} />
+              <span
+                className={cn(
+                  "text-xs font-semibold tabular-nums",
+                  scoreColor(f.score),
+                )}
+              >
+                {formatScore(f.score)}
+              </span>
+            </span>
+          ))}
         </div>
-      </td>
-    </tr>
+      )}
+    </div>
   );
 }

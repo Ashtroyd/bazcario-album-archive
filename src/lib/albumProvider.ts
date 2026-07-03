@@ -27,6 +27,26 @@ function yearOf(releaseDate: string | undefined | null): number | null {
   return Number.isFinite(y) ? y : null;
 }
 
+/** Trim verbose iTunes suffixes: "X - The 2nd Album", "X - EP", "X (Deluxe)". */
+function cleanTitle(title: string | undefined | null): string {
+  const raw = String(title ?? "").trim();
+  const cleaned = raw
+    .replace(
+      /\s*[-–—]\s*(the\s+)?\d+(st|nd|rd|th)\s+(mini\s+|full\s+)?(album|ep|single)\b.*$/i,
+      "",
+    )
+    .replace(
+      /\s*[-–—]\s*(deluxe|special|repackage|expanded|remaster(ed)?|ep|single)\b.*$/i,
+      "",
+    )
+    .replace(
+      /\s*[([](deluxe|special|repackage|expanded|remaster(ed)?)[^)\]]*[)\]]\s*$/i,
+      "",
+    )
+    .trim();
+  return cleaned || raw;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function searchAlbums(term: string): Promise<AlbumSuggestion[]> {
   const q = term.trim();
@@ -39,7 +59,7 @@ export async function searchAlbums(term: string): Promise<AlbumSuggestion[]> {
     return (data.results ?? [])
       .map((r: any) => ({
         id: r.collectionId,
-        title: r.collectionName,
+        title: cleanTitle(r.collectionName),
         artist: r.artistName,
         year: yearOf(r.releaseDate),
         genre: r.primaryGenreName ?? null,
@@ -74,7 +94,7 @@ export async function getAlbumDetails(
       .filter(Boolean);
     return {
       id: album.collectionId,
-      title: album.collectionName,
+      title: cleanTitle(album.collectionName),
       artist: album.artistName,
       year: yearOf(album.releaseDate),
       genre: album.primaryGenreName ?? null,

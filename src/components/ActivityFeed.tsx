@@ -62,11 +62,15 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
 
   return (
     <ul className="space-y-2">
-      {items.map((item) => (
-        <li key={item.id}>
+      {items.map((item, i) => (
+        <li
+          key={item.id}
+          className="list-in"
+          style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
+        >
           <Link
             href={linkFor(item)}
-            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 transition hover:border-zinc-700"
+            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-700"
           >
             <div className="relative shrink-0">
               <Avatar url={item.actor.avatar} name={item.actor.name} size={38} />
