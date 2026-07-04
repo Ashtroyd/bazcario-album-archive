@@ -9,6 +9,7 @@ import { RatingMetaForm } from "@/components/RatingMetaForm";
 import { DeleteAlbumButton } from "@/components/DeleteAlbumButton";
 import { Comments } from "@/components/Comments";
 import { CoverEditor } from "@/components/CoverEditor";
+import { ShareCardButton } from "@/components/ShareCardButton";
 import { formatDate, formatScore } from "@/lib/utils";
 import type {
   Album,
@@ -219,6 +220,10 @@ export default async function AlbumDetailPage({
               {leastName && <div>💤 {leastName}</div>}
             </div>
           )}
+
+          <div className="mt-4">
+            <ShareCardButton albumId={a.id} title={a.title} />
+          </div>
 
           {isOwner && (
             <div className="mt-3">
