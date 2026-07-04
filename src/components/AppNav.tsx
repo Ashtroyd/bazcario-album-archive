@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signout } from "@/app/actions/auth";
 import { Avatar } from "@/components/Avatar";
+import { IconBell } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -65,7 +66,7 @@ export function AppNav({
                 : "text-zinc-300 hover:bg-zinc-800 hover:text-white",
             )}
           >
-            <span className="text-lg leading-none">🔔</span>
+            <IconBell size={20} />
             {unreadCount > 0 && (
               <span className="absolute top-0 right-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-bold text-white">
                 {unreadCount > 9 ? "9+" : unreadCount}

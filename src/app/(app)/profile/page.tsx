@@ -3,6 +3,7 @@ import { getMyProfile } from "@/lib/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { signout } from "@/app/actions/auth";
 import { Avatar } from "@/components/Avatar";
+import { FavoriteTrackPicker } from "@/components/FavoriteTrackPicker";
 import { cn, formatScore } from "@/lib/utils";
 
 export default async function ProfilePage() {
@@ -24,11 +25,15 @@ export default async function ProfilePage() {
 
   const { data: trData } = await supabase
     .from("track_ratings")
-    .select("rating, tracks(name, albums(title))")
+    .select("rating, tracks(id, name, albums(title))")
     .eq("user_id", user!.id);
   const trackRatings = (trData ?? []) as unknown as {
     rating: number | string;
-    tracks: { name: string; albums: { title: string } | null } | null;
+    tracks: {
+      id: string;
+      name: string;
+      albums: { title: string } | null;
+    } | null;
   }[];
 
   // ---- Aggregate stats ----
@@ -76,26 +81,14 @@ export default async function ProfilePage() {
     value: trackScores.filter((s) => s >= b.min && s < b.max).length,
   }));
 
-  let topTrack: { name: string; album: string | null; score: number } | null =
-    null;
-  for (const t of trackRatings) {
-    const s = Number(t.rating);
-    if (Number.isFinite(s) && (!topTrack || s > topTrack.score))
-      topTrack = {
-        name: t.tracks?.name ?? "?",
-        album: t.tracks?.albums?.title ?? null,
-        score: s,
-      };
-  }
-
   const personality =
     avgTrack == null
       ? null
       : avgTrack >= 8.5
-        ? "Generous 💛"
+        ? "Generous"
         : avgTrack >= 7
-          ? "Balanced ⚖️"
-          : "Critical 🔍";
+          ? "Balanced"
+          : "Critical";
 
   const { count: friendCount } = await supabase
     .from("friendships")
@@ -109,6 +102,30 @@ export default async function ProfilePage() {
     { label: "Avg rating", value: formatScore(avgOverall) },
     { label: "Friends", value: String(friendCount ?? 0) },
   ];
+
+  // Manual favourite-track pick.
+  const { data: favRow } = await supabase
+    .from("profiles")
+    .select("favorite_track_id")
+    .eq("id", user!.id)
+    .maybeSingle();
+  const favTrackId =
+    (favRow?.favorite_track_id as string | null | undefined) ?? null;
+  const trackList = Array.from(
+    new Map(
+      trackRatings
+        .filter((t) => t.tracks?.id)
+        .map((t) => [
+          t.tracks!.id,
+          {
+            id: t.tracks!.id,
+            name: t.tracks!.name,
+            album: t.tracks!.albums?.title ?? null,
+          },
+        ]),
+    ).values(),
+  );
+  const favTrack = trackList.find((t) => t.id === favTrackId) ?? null;
 
   return (
     <div className="space-y-6">
@@ -130,7 +147,7 @@ export default async function ProfilePage() {
               name={profile?.display_name}
               size={64}
             />
-            <div>
+            <div className="min-w-0 flex-1">
               <label className="label" htmlFor="avatar">
                 Avatar
               </label>
@@ -139,7 +156,7 @@ export default async function ProfilePage() {
                 name="avatar"
                 type="file"
                 accept="image/*"
-                className="block text-sm text-zinc-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-zinc-200"
+                className="block w-full max-w-full text-xs text-zinc-400 file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-zinc-800 file:px-2.5 file:py-1.5 file:text-zinc-200"
               />
             </div>
           </div>
@@ -225,15 +242,17 @@ export default async function ProfilePage() {
               value={topAlbum?.title ?? "—"}
               sub={topAlbum ? formatScore(topAlbum.score) : undefined}
             />
-            <Highlight
-              label="Favourite track"
-              value={topTrack?.name ?? "—"}
-              sub={
-                topTrack
-                  ? `${formatScore(topTrack.score)}${topTrack.album ? ` · ${topTrack.album}` : ""}`
-                  : undefined
-              }
-            />
+            <div className="card">
+              <div className="text-[10px] tracking-wide text-zinc-500 uppercase">
+                Favourite track
+              </div>
+              <FavoriteTrackPicker tracks={trackList} current={favTrackId} />
+              {favTrack?.album && (
+                <div className="mt-1 truncate text-xs text-zinc-500">
+                  {favTrack.album}
+                </div>
+              )}
+            </div>
             <Highlight
               label="Rating style"
               value={personality ?? "—"}

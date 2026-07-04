@@ -33,3 +33,19 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/profile");
   revalidatePath("/", "layout");
 }
+
+export async function setFavoriteTrack(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const favorite_track_id =
+    String(formData.get("favorite_track_id") || "") || null;
+  await supabase
+    .from("profiles")
+    .update({ favorite_track_id })
+    .eq("id", user.id);
+  revalidatePath("/profile");
+  revalidatePath("/", "layout");
+}
