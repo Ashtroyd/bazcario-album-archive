@@ -5,6 +5,7 @@ import { acceptFriend, removeFriend } from "@/app/actions/friends";
 import { Avatar } from "@/components/Avatar";
 import { CoverImage } from "@/components/CoverImage";
 import { ScoreBadge } from "@/components/ScoreBadge";
+import { IconComment, IconStar } from "@/components/icons";
 import { cn, timeAgo } from "@/lib/utils";
 
 export default async function NotificationsPage() {
@@ -29,7 +30,7 @@ export default async function NotificationsPage() {
 
       {empty && (
         <div className="card text-sm text-zinc-400">
-          You&apos;re all caught up. 🎉
+          You&apos;re all caught up.
         </div>
       )}
 
@@ -108,8 +109,12 @@ export default async function NotificationsPage() {
                 >
                   <div className="relative shrink-0">
                     <Avatar url={n.actor.avatar} name={n.actor.name} size={36} />
-                    <span className="absolute -right-1 -bottom-1 text-xs">
-                      {n.kind === "comment" ? "💬" : "⭐"}
+                    <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300">
+                      {n.kind === "comment" ? (
+                        <IconComment size={11} />
+                      ) : (
+                        <IconStar size={11} />
+                      )}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">

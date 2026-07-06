@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">
-          Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""} 👋
+          Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
         </h1>
         <p className="text-zinc-400">Your album ratings, synced everywhere.</p>
       </div>

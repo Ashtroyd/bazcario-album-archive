@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef } from "react";
+import { cn } from "@/lib/utils";
 
 const selectCls =
   "rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm outline-none focus:border-violet-500";
@@ -32,58 +33,60 @@ export function LibraryFilters({
   const hasFilters = ["q", "genre", "year", "sort"].some((k) => sp.get(k));
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <input
         defaultValue={sp.get("q") ?? ""}
         onChange={(e) => onSearch(e.target.value)}
         placeholder="Search title or artist…"
-        className="input max-w-xs flex-1"
+        className="input sm:max-w-xs sm:flex-1"
       />
-      <select
-        defaultValue={sp.get("genre") ?? ""}
-        onChange={(e) => set("genre", e.target.value)}
-        className={selectCls}
-        aria-label="Filter by genre"
-      >
-        <option value="">All genres</option>
-        {genres.map((g) => (
-          <option key={g} value={g}>
-            {g}
-          </option>
-        ))}
-      </select>
-      <select
-        defaultValue={sp.get("year") ?? ""}
-        onChange={(e) => set("year", e.target.value)}
-        className={selectCls}
-        aria-label="Filter by year"
-      >
-        <option value="">All years</option>
-        {years.map((y) => (
-          <option key={y} value={String(y)}>
-            {y}
-          </option>
-        ))}
-      </select>
-      <select
-        defaultValue={sp.get("sort") ?? "recent"}
-        onChange={(e) => set("sort", e.target.value)}
-        className={selectCls}
-        aria-label="Sort"
-      >
-        <option value="recent">Newest</option>
-        <option value="score">Your score</option>
-        <option value="title">Title</option>
-        <option value="year">Year</option>
-      </select>
-      {hasFilters && (
-        <button
-          onClick={() => router.push("/albums")}
-          className="btn btn-ghost px-2 py-1.5 text-sm"
+      <div className="flex items-center gap-2">
+        <select
+          defaultValue={sp.get("genre") ?? ""}
+          onChange={(e) => set("genre", e.target.value)}
+          className={cn(selectCls, "min-w-0 flex-1 sm:flex-none")}
+          aria-label="Filter by genre"
         >
-          Clear
-        </button>
-      )}
+          <option value="">All genres</option>
+          {genres.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+        <select
+          defaultValue={sp.get("year") ?? ""}
+          onChange={(e) => set("year", e.target.value)}
+          className={cn(selectCls, "min-w-0 flex-1 sm:flex-none")}
+          aria-label="Filter by year"
+        >
+          <option value="">All years</option>
+          {years.map((y) => (
+            <option key={y} value={String(y)}>
+              {y}
+            </option>
+          ))}
+        </select>
+        <select
+          defaultValue={sp.get("sort") ?? "recent"}
+          onChange={(e) => set("sort", e.target.value)}
+          className={cn(selectCls, "min-w-0 flex-1 sm:flex-none")}
+          aria-label="Sort"
+        >
+          <option value="recent">Newest</option>
+          <option value="score">Your score</option>
+          <option value="title">Title</option>
+          <option value="year">Year</option>
+        </select>
+        {hasFilters && (
+          <button
+            onClick={() => router.push("/albums")}
+            className="btn btn-ghost px-2 py-1.5 text-sm"
+          >
+            Clear
+          </button>
+        )}
+      </div>
     </div>
   );
 }

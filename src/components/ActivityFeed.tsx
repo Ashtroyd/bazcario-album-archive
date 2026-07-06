@@ -2,14 +2,23 @@ import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { CoverImage } from "@/components/CoverImage";
 import { ScoreBadge } from "@/components/ScoreBadge";
+import {
+  IconStar,
+  IconComment,
+  IconPlus,
+  IconUserPlus,
+} from "@/components/icons";
 import { timeAgo } from "@/lib/utils";
 import type { ActivityItem } from "@/lib/activity";
 
-const ICON: Record<ActivityItem["type"], string> = {
-  rating: "⭐",
-  comment: "💬",
-  album: "➕",
-  friend: "🤝",
+const ICON: Record<
+  ActivityItem["type"],
+  (props: { className?: string; size?: number }) => React.ReactElement
+> = {
+  rating: IconStar,
+  comment: IconComment,
+  album: IconPlus,
+  friend: IconUserPlus,
 };
 
 function linkFor(item: ActivityItem): string {
@@ -74,8 +83,8 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
           >
             <div className="relative shrink-0">
               <Avatar url={item.actor.avatar} name={item.actor.name} size={38} />
-              <span className="absolute -right-1 -bottom-1 text-xs">
-                {ICON[item.type]}
+              <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300">
+                {ICON[item.type]({ size: 11 })}
               </span>
             </div>
             <div className="min-w-0 flex-1">

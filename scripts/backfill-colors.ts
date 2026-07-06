@@ -1,6 +1,7 @@
 /**
- * One-off: compute and store the cover-art color palette for every album that
- * has a cover but no cached colors yet. Run after applying 0002_album_colors.sql.
+ * Compute and store the cover-art color palette for every album with a cover.
+ * Recomputes existing palettes too, so palette-logic changes (e.g. the accent
+ * contrast guard) propagate to already-colored albums. Idempotent.
  *
  *   npm run backfill:colors
  */
@@ -27,7 +28,7 @@ async function main() {
 
   let done = 0;
   for (const a of albums ?? []) {
-    if (!a.cover_image_url || a.cover_colors) continue;
+    if (!a.cover_image_url) continue;
     const colors = await extractColors(a.cover_image_url);
     if (colors) {
       await db.from("albums").update({ cover_colors: colors }).eq("id", a.id);

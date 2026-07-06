@@ -6,10 +6,9 @@ import { CoverImage } from "@/components/CoverImage";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { TrackRatingTable } from "@/components/TrackRatingTable";
 import { RatingMetaForm } from "@/components/RatingMetaForm";
-import { DeleteAlbumButton } from "@/components/DeleteAlbumButton";
 import { Comments } from "@/components/Comments";
-import { CoverEditor } from "@/components/CoverEditor";
-import { ShareCardButton } from "@/components/ShareCardButton";
+import { AlbumActionsMenu } from "@/components/AlbumActionsMenu";
+import { IconHeart, IconMoon } from "@/components/icons";
 import { formatDate, formatScore } from "@/lib/utils";
 import type {
   Album,
@@ -142,11 +141,9 @@ export default async function AlbumDetailPage({
         className="relative -mx-4 -mt-6 px-4 pt-10 pb-8"
         style={{ background: heroGradient }}
       >
-        {isOwner && (
-          <div className="absolute top-3 right-4">
-            <DeleteAlbumButton albumId={a.id} />
-          </div>
-        )}
+        <div className="absolute top-3 right-4">
+          <AlbumActionsMenu albumId={a.id} title={a.title} isOwner={isOwner} />
+        </div>
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <CoverImage
             url={a.cover_image_url}
@@ -216,20 +213,22 @@ export default async function AlbumDetailPage({
               {myRating?.first_listen_date && (
                 <div>First listen: {formatDate(myRating.first_listen_date)}</div>
               )}
-              {favName && <div>❤️ {favName}</div>}
-              {leastName && <div>💤 {leastName}</div>}
+              {favName && (
+                <div className="flex items-center justify-center gap-1.5">
+                  <IconHeart size={14} />
+                  <span style={{ opacity: 0.7 }}>Favourite:</span> {favName}
+                </div>
+              )}
+              {leastName && (
+                <div className="flex items-center justify-center gap-1.5">
+                  <IconMoon size={14} />
+                  <span style={{ opacity: 0.7 }}>Least favourite:</span>{" "}
+                  {leastName}
+                </div>
+              )}
             </div>
           )}
 
-          <div className="mt-4">
-            <ShareCardButton albumId={a.id} title={a.title} />
-          </div>
-
-          {isOwner && (
-            <div className="mt-3">
-              <CoverEditor albumId={a.id} />
-            </div>
-          )}
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signout } from "@/app/actions/auth";
 import { Avatar } from "@/components/Avatar";
-import { IconBell } from "@/components/icons";
+import { IconBell, IconHeadphones } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -27,8 +27,12 @@ export function AppNav({
   return (
     <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-4">
-        <Link href="/" className="mr-2 font-semibold whitespace-nowrap">
-          🎧 <span className="hidden sm:inline">Archive</span>
+        <Link
+          href="/"
+          className="mr-2 flex items-center gap-2 font-semibold whitespace-nowrap"
+        >
+          <IconHeadphones size={22} className="text-violet-400" />
+          <span className="hidden sm:inline">Archive</span>
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">

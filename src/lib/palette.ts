@@ -20,6 +20,39 @@ function darken(hex: string, amount: number): string {
   return `#${scale(0)}${scale(2)}${scale(4)}`;
 }
 
+/** Lighten a #rrggbb color toward white by `amount` (0–1). */
+function lighten(hex: string, amount: number): string {
+  const h = hex.replace("#", "");
+  const scale = (i: number) => {
+    const c = parseInt(h.slice(i, i + 2), 16);
+    return Math.round(c + (255 - c) * amount)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${scale(0)}${scale(2)}${scale(4)}`;
+}
+
+/** WCAG contrast ratio between two #rrggbb colors. */
+function contrast(a: string, b: string): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/**
+ * Legibility guard: dark covers can yield accents that vanish against the
+ * hero background (e.g. deep indigo on near-black). Lighten the accent in
+ * steps until it clears a readable contrast against the bg.
+ */
+function ensureReadableAccent(accent: string, bg: string): string {
+  let out = accent;
+  for (let i = 0; i < 12 && contrast(out, bg) < 4.5; i++) {
+    out = lighten(out, 0.15);
+  }
+  return out;
+}
+
 /**
  * Extract an Apple-Music-style palette from a cover image: a dark, readable
  * background tint + a vivid accent + a contrast-safe text color. Server-only.
@@ -43,8 +76,14 @@ export async function extractColors(
     // Keep the hero background dark enough for light text.
     if (luminance(bg) > 0.35) bg = darken(bg, 0.55);
     const text = luminance(bg) > 0.5 ? "#0a0a0a" : "#ffffff";
+    // Scores/accents rendered on the hero must stay legible. The hero fades
+    // to the near-black page background, so guard against both.
+    const accent = ensureReadableAccent(
+      ensureReadableAccent(accentSwatch.hex, bg),
+      "#09090b",
+    );
 
-    return { bg, accent: accentSwatch.hex, text };
+    return { bg, accent, text };
   } catch {
     return null;
   }

@@ -6,6 +6,7 @@ import { CoverImage } from "@/components/CoverImage";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { ReplayBadge } from "@/components/ReplayBadge";
 import { Comments } from "@/components/Comments";
+import { IconHeart, IconMoon } from "@/components/icons";
 import { cn, formatDate, formatScore } from "@/lib/utils";
 import type { Album, CoverColors, ReplayValue, Track } from "@/lib/types";
 
@@ -52,11 +53,18 @@ export default async function ComparePage({
   if (!album) notFound();
   const a = album as Album;
 
-  const { data: friendProfile } = await supabase
-    .from("profiles")
-    .select("id, display_name, avatar_url")
-    .eq("id", friendId)
-    .maybeSingle();
+  const [{ data: friendProfile }, { data: myProfile }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", friendId)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user!.id)
+      .maybeSingle(),
+  ]);
 
   const { data: tracksData } = await supabase
     .from("tracks")
@@ -194,6 +202,8 @@ export default async function ComparePage({
         <div className="grid grid-cols-2 gap-3">
           <PersonHeader
             name="You"
+            avatarUrl={myProfile?.avatar_url}
+            avatarName={myProfile?.display_name}
             overall={
               myRating?.overall_rating != null
                 ? Number(myRating.overall_rating)
@@ -214,9 +224,22 @@ export default async function ComparePage({
         </div>
 
         {!theyHaveData ? (
-          <div className="card text-sm text-zinc-400">
-            You can&apos;t see {friendName}&apos;s ratings for this album (they
-            haven&apos;t rated it, or you&apos;re not friends).
+          <div className="card space-y-3 text-sm text-zinc-400">
+            <p>
+              Nothing to compare yet — {friendName} hasn&apos;t rated this
+              album (or you&apos;re not friends).
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/album/${id}`} className="btn btn-outline text-sm">
+                View album
+              </Link>
+              <Link
+                href={`/friends/${friendId}`}
+                className="btn btn-ghost text-sm"
+              >
+                See {friendName}&apos;s profile
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -298,17 +321,19 @@ export default async function ComparePage({
 function PersonHeader({
   name,
   avatarUrl,
+  avatarName,
   overall,
   accent,
 }: {
   name: string;
   avatarUrl?: string | null;
+  avatarName?: string | null;
   overall: number | null;
   accent: string;
 }) {
   return (
     <div className="card flex items-center gap-3 py-3">
-      <Avatar url={avatarUrl} name={name} size={40} />
+      <Avatar url={avatarUrl} name={avatarName ?? name} size={40} />
       <div className="min-w-0">
         <div className="truncate text-sm font-medium">{name}</div>
         {overall != null ? (
@@ -350,8 +375,18 @@ function DetailColumn({
               {formatDate(rating.first_listen_date)}
             </div>
           )}
-          {fav && <div className="text-zinc-300">❤️ {fav}</div>}
-          {least && <div className="text-zinc-300">💤 {least}</div>}
+          {fav && (
+            <div className="flex items-center gap-1.5 text-zinc-300">
+              <IconHeart size={13} className="shrink-0 text-zinc-500" />
+              <span className="text-zinc-500">Favourite:</span> {fav}
+            </div>
+          )}
+          {least && (
+            <div className="flex items-center gap-1.5 text-zinc-300">
+              <IconMoon size={13} className="shrink-0 text-zinc-500" />
+              <span className="text-zinc-500">Least favourite:</span> {least}
+            </div>
+          )}
           {rating?.notes && (
             <p className="whitespace-pre-wrap text-zinc-400">{rating.notes}</p>
           )}
