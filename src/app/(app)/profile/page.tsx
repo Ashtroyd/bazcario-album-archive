@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -131,11 +132,16 @@ export default async function ProfilePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Profile</h1>
-        <form action={signout}>
-          <button type="submit" className="btn btn-outline text-sm">
-            Sign out
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          <Link href="/favourites" className="btn btn-outline text-sm">
+            Favourite songs
+          </Link>
+          <form action={signout}>
+            <button type="submit" className="btn btn-outline text-sm">
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">

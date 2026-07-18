@@ -15,6 +15,14 @@ export type AlbumSuggestion = {
 
 export type AlbumDetails = AlbumSuggestion & { tracks: string[] };
 
+export type SongSuggestion = {
+  id: number;
+  title: string;
+  artist: string;
+  album: string | null;
+  coverUrl: string | null;
+};
+
 /** Upgrade iTunes artwork (e.g. .../100x100bb.jpg → .../600x600bb.jpg). */
 function hiRes(art: string | undefined | null): string | null {
   if (!art) return null;
@@ -66,6 +74,28 @@ export async function searchAlbums(term: string): Promise<AlbumSuggestion[]> {
         coverUrl: hiRes(r.artworkUrl100),
       }))
       .filter((a: AlbumSuggestion) => a.id && a.title && a.artist);
+  } catch {
+    return [];
+  }
+}
+
+export async function searchSongs(term: string): Promise<SongSuggestion[]> {
+  const q = term.trim();
+  if (q.length < 2) return [];
+  const url = `${ITUNES}/search?term=${encodeURIComponent(q)}&entity=song&media=music&limit=8`;
+  try {
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results ?? [])
+      .map((r: any) => ({
+        id: r.trackId,
+        title: r.trackName,
+        artist: r.artistName,
+        album: r.collectionName ?? null,
+        coverUrl: hiRes(r.artworkUrl100),
+      }))
+      .filter((s: SongSuggestion) => s.id && s.title && s.artist);
   } catch {
     return [];
   }

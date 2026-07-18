@@ -3,7 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { AlbumCard } from "@/components/AlbumCard";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { MonthlyFavoritesCard } from "@/components/MonthlyFavoritesCard";
 import { getFriendActivity } from "@/lib/activity";
+import {
+  formatMonthLabel,
+  getFriendsMonthlyFavorites,
+  getMonthlyFavorites,
+  monthKey,
+} from "@/lib/monthlyFavorites";
 import type { Album } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -35,6 +42,12 @@ export default async function DashboardPage() {
   ) as string[];
 
   const activity = await getFriendActivity(supabase, user!.id, friendIds);
+
+  const currentMonth = monthKey();
+  const [myPicks, friendsPicks] = await Promise.all([
+    getMonthlyFavorites(supabase, user!.id, currentMonth),
+    getFriendsMonthlyFavorites(supabase, friendIds, currentMonth),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -69,6 +82,45 @@ export default async function DashboardPage() {
                   r.overall_rating != null ? Number(r.overall_rating) : null
                 }
               />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            {formatMonthLabel(currentMonth)} favourites
+          </h2>
+          <Link
+            href="/favourites"
+            className="text-sm text-violet-400 hover:underline"
+          >
+            {myPicks.length > 0 ? "Edit →" : "Add songs →"}
+          </Link>
+        </div>
+        {myPicks.length === 0 ? (
+          <div className="card text-sm text-zinc-400">
+            You haven&apos;t picked any favourite songs this month yet.{" "}
+            <Link href="/favourites" className="text-violet-400 hover:underline">
+              Add up to 5 →
+            </Link>
+          </div>
+        ) : (
+          <div className="card">
+            <MonthlyFavoritesCard picks={myPicks} />
+          </div>
+        )}
+
+        {friendsPicks.length > 0 && (
+          <div className="space-y-3 pt-1">
+            {friendsPicks.map((f) => (
+              <div key={f.userId} className="card">
+                <div className="mb-2 text-sm font-medium text-zinc-300">
+                  {f.name ?? "A friend"}&apos;s picks
+                </div>
+                <MonthlyFavoritesCard picks={f.picks} />
+              </div>
             ))}
           </div>
         )}

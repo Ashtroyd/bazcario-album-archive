@@ -140,6 +140,22 @@ export function IconTrash({ className, size }: IconProps) {
   );
 }
 
+export function IconChevronUp({ className, size }: IconProps) {
+  return (
+    <svg {...svgProps(size)} className={className}>
+      <path d="m6 15 6-6 6 6" />
+    </svg>
+  );
+}
+
+export function IconChevronDown({ className, size }: IconProps) {
+  return (
+    <svg {...svgProps(size)} className={className}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function IconHeadphones({ className, size }: IconProps) {
   return (
     <svg {...svgProps(size)} className={className}>

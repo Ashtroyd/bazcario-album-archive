@@ -3,8 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/Avatar";
 import { AlbumCard } from "@/components/AlbumCard";
+import { MonthlyFavoritesCard } from "@/components/MonthlyFavoritesCard";
 import { cn, formatScore } from "@/lib/utils";
 import { computeTasteMatch, matchColor } from "@/lib/tasteMatch";
+import { formatMonthLabel, getMonthlyFavorites, monthKey } from "@/lib/monthlyFavorites";
 import type { Album, Profile } from "@/lib/types";
 
 export default async function FriendProfilePage({
@@ -107,6 +109,11 @@ export default async function FriendProfilePage({
     taste = computeTasteMatch(myMap, theirMap);
   }
 
+  const currentMonth = monthKey();
+  const monthlyPicks = areFriends
+    ? await getMonthlyFavorites(supabase, id, currentMonth)
+    : [];
+
   return (
     <div className="space-y-6">
       <Link href="/friends" className="text-sm text-zinc-400 hover:underline">
@@ -156,6 +163,17 @@ export default async function FriendProfilePage({
             )}
           </div>
         </div>
+      )}
+
+      {areFriends && monthlyPicks.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+            {formatMonthLabel(currentMonth)} favourites
+          </h2>
+          <div className="card">
+            <MonthlyFavoritesCard picks={monthlyPicks} />
+          </div>
+        </section>
       )}
 
       {!areFriends ? (
