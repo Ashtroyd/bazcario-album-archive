@@ -5,7 +5,7 @@ import type { MonthlyFavorite } from "@/lib/monthlyFavorites";
 export function MonthlyFavoritesCard({ picks }: { picks: MonthlyFavorite[] }) {
   if (picks.length === 0) return null;
   return (
-    <ol className="flex gap-3 overflow-x-auto pb-1">
+    <ol className="flex gap-3 overflow-x-auto pt-2 pb-1">
       {picks.map((p) => (
         <li key={p.id} className="w-20 shrink-0 text-center">
           <div className="relative">

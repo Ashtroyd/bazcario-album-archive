@@ -15,7 +15,7 @@ export function RatingMetaForm({
       <input type="hidden" name="album_id" value={albumId} />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div>
+        <div className="min-w-0">
           <label className="label" htmlFor="first_listen_date">
             First listen
           </label>
@@ -24,12 +24,12 @@ export function RatingMetaForm({
             type="date"
             name="first_listen_date"
             defaultValue={rating?.first_listen_date ?? ""}
-            className="input"
+            className="input min-w-0"
           />
         </div>
         <div className="hidden sm:block" />
 
-        <div>
+        <div className="min-w-0">
           <label className="label" htmlFor="favorite_track_id">
             Favorite track
           </label>
@@ -37,7 +37,7 @@ export function RatingMetaForm({
             id="favorite_track_id"
             name="favorite_track_id"
             defaultValue={rating?.favorite_track_id ?? ""}
-            className="input"
+            className="input min-w-0"
           >
             <option value="">—</option>
             {tracks.map((t) => (
@@ -47,7 +47,7 @@ export function RatingMetaForm({
             ))}
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="label" htmlFor="least_favorite_track_id">
             Least favorite
           </label>
@@ -55,7 +55,7 @@ export function RatingMetaForm({
             id="least_favorite_track_id"
             name="least_favorite_track_id"
             defaultValue={rating?.least_favorite_track_id ?? ""}
-            className="input"
+            className="input min-w-0"
           >
             <option value="">—</option>
             {tracks.map((t) => (
