@@ -12,14 +12,25 @@ export function AddFriendSearch() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<FoundUser[]>([]);
   const [searched, setSearched] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [pending, startSearch] = useTransition();
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  const [, startSend] = useTransition();
 
   function doSearch(e: React.FormEvent) {
     e.preventDefault();
-    startTransition(async () => {
+    startSearch(async () => {
       const r = await searchUsers(q);
       setResults(r);
       setSearched(true);
+    });
+  }
+
+  function send(id: string) {
+    setSentIds((prev) => new Set(prev).add(id));
+    startSend(async () => {
+      const fd = new FormData();
+      fd.set("friend_id", id);
+      await sendFriendRequest(fd);
     });
   }
 
@@ -48,18 +59,23 @@ export function AddFriendSearch() {
 
       {results.length > 0 && (
         <ul className="space-y-2">
-          {results.map((u) => (
-            <li key={u.id} className="flex items-center gap-2">
-              <Avatar url={u.avatar_url} name={u.display_name} size={28} />
-              <span className="text-sm">{u.display_name ?? u.email}</span>
-              <form action={sendFriendRequest} className="ml-auto">
-                <input type="hidden" name="friend_id" value={u.id} />
-                <button type="submit" className="btn btn-primary px-3 py-1 text-xs">
-                  Add
+          {results.map((u) => {
+            const sent = sentIds.has(u.id);
+            return (
+              <li key={u.id} className="flex items-center gap-2">
+                <Avatar url={u.avatar_url} name={u.display_name} size={28} />
+                <span className="text-sm">{u.display_name ?? u.email}</span>
+                <button
+                  type="button"
+                  disabled={sent}
+                  onClick={() => send(u.id)}
+                  className="btn btn-primary ml-auto px-3 py-1 text-xs disabled:opacity-60"
+                >
+                  {sent ? "Sent" : "Add"}
                 </button>
-              </form>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

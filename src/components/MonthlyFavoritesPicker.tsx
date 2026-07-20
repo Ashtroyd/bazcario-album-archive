@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import {
+  moveMonthlyFavorite,
   removeMonthlyFavorite,
   setMonthlyFavorite,
   swapMonthlyFavoritePosition,
@@ -25,6 +26,34 @@ type Suggestion = {
 
 const SLOTS = [1, 2, 3, 4, 5];
 
+type Action =
+  | { type: "swap"; a: number; b: number }
+  | { type: "relocate"; id: string; target: number }
+  | { type: "remove"; id: string }
+  | { type: "add"; position: number; pick: MonthlyFavorite };
+
+function reducer(state: MonthlyFavorite[], action: Action): MonthlyFavorite[] {
+  switch (action.type) {
+    case "swap":
+      return state.map((p) => {
+        if (p.position === action.a) return { ...p, position: action.b };
+        if (p.position === action.b) return { ...p, position: action.a };
+        return p;
+      });
+    case "relocate":
+      return state.map((p) =>
+        p.id === action.id ? { ...p, position: action.target } : p,
+      );
+    case "remove":
+      return state.filter((p) => p.id !== action.id);
+    case "add":
+      return [
+        ...state.filter((p) => p.position !== action.position),
+        action.pick,
+      ];
+  }
+}
+
 export function MonthlyFavoritesPicker({
   month,
   picks,
@@ -32,16 +61,95 @@ export function MonthlyFavoritesPicker({
   month: string;
   picks: MonthlyFavorite[];
 }) {
-  const byPosition = new Map(picks.map((p) => [p.position, p]));
+  const [optimisticPicks, applyOptimistic] = useOptimistic(picks, reducer);
+  const [, startTransition] = useTransition();
+  const byPosition = new Map(optimisticPicks.map((p) => [p.position, p]));
+
+  function move(pick: MonthlyFavorite, dir: 1 | -1) {
+    const target = pick.position + dir;
+    if (target < 1 || target > 5) return;
+    const other = byPosition.get(target);
+
+    startTransition(async () => {
+      if (other) {
+        applyOptimistic({ type: "swap", a: pick.position, b: target });
+        const fd = new FormData();
+        fd.set("month", month);
+        fd.set("row_a_id", pick.id);
+        fd.set("row_b_id", other.id);
+        fd.set("position", String(pick.position));
+        fd.set("target", String(target));
+        fd.set("title", pick.title);
+        fd.set("artist", pick.artist);
+        fd.set("cover_url", pick.cover_url ?? "");
+        fd.set("external_id", pick.external_id ?? "");
+        await swapMonthlyFavoritePosition(fd);
+      } else {
+        applyOptimistic({ type: "relocate", id: pick.id, target });
+        const fd = new FormData();
+        fd.set("id", pick.id);
+        fd.set("month", month);
+        fd.set("target", String(target));
+        await moveMonthlyFavorite(fd);
+      }
+    });
+  }
+
+  function remove(pick: MonthlyFavorite) {
+    startTransition(async () => {
+      applyOptimistic({ type: "remove", id: pick.id });
+      const fd = new FormData();
+      fd.set("id", pick.id);
+      fd.set("month", month);
+      await removeMonthlyFavorite(fd);
+    });
+  }
+
+  function add(position: number, s: Suggestion) {
+    startTransition(async () => {
+      applyOptimistic({
+        type: "add",
+        position,
+        pick: {
+          id: `temp-${s.id}-${Date.now()}`,
+          user_id: "",
+          month,
+          position,
+          title: s.title,
+          artist: s.artist,
+          cover_url: s.coverUrl,
+          external_id: String(s.id),
+        },
+      });
+      const fd = new FormData();
+      fd.set("month", month);
+      fd.set("position", String(position));
+      fd.set("title", s.title);
+      fd.set("artist", s.artist);
+      fd.set("cover_url", s.coverUrl ?? "");
+      fd.set("external_id", String(s.id));
+      await setMonthlyFavorite(fd);
+    });
+  }
 
   return (
     <div className="space-y-2">
       {SLOTS.map((pos) => {
         const pick = byPosition.get(pos);
         return pick ? (
-          <FilledSlot key={pos} month={month} pick={pick} />
+          <FilledSlot
+            key={pos}
+            pick={pick}
+            onMoveUp={() => move(pick, -1)}
+            onMoveDown={() => move(pick, 1)}
+            onRemove={() => remove(pick)}
+          />
         ) : (
-          <EmptySlot key={pos} month={month} position={pos} />
+          <EmptySlot
+            key={pos}
+            position={pos}
+            onPick={(s) => add(pos, s)}
+          />
         );
       })}
     </div>
@@ -49,28 +157,18 @@ export function MonthlyFavoritesPicker({
 }
 
 function FilledSlot({
-  month,
   pick,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
 }: {
-  month: string;
   pick: MonthlyFavorite;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
 }) {
-  const [pending, setPending] = useState(false);
-
-  async function move(dir: 1 | -1) {
-    const target = pick.position + dir;
-    if (target < 1 || target > 5) return;
-    setPending(true);
-    const fd = new FormData();
-    fd.set("month", month);
-    fd.set("position", String(pick.position));
-    fd.set("target", String(target));
-    await swapMonthlyFavoritePosition(fd);
-    setPending(false);
-  }
-
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-2.5">
+    <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-2.5 transition">
       <span className="w-5 shrink-0 text-center text-sm font-semibold text-zinc-500">
         {pick.position}
       </span>
@@ -86,8 +184,8 @@ function FilledSlot({
       <div className="flex shrink-0 flex-col">
         <button
           type="button"
-          disabled={pending || pick.position === 1}
-          onClick={() => move(-1)}
+          disabled={pick.position === 1}
+          onClick={onMoveUp}
           aria-label="Move up"
           className="rounded p-0.5 text-zinc-500 transition hover:text-white disabled:opacity-20"
         >
@@ -95,35 +193,37 @@ function FilledSlot({
         </button>
         <button
           type="button"
-          disabled={pending || pick.position === 5}
-          onClick={() => move(1)}
+          disabled={pick.position === 5}
+          onClick={onMoveDown}
           aria-label="Move down"
           className="rounded p-0.5 text-zinc-500 transition hover:text-white disabled:opacity-20"
         >
           <IconChevronDown size={16} />
         </button>
       </div>
-      <form action={removeMonthlyFavorite}>
-        <input type="hidden" name="id" value={pick.id} />
-        <input type="hidden" name="month" value={month} />
-        <button
-          type="submit"
-          aria-label="Remove"
-          className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-red-950/40 hover:text-red-400"
-        >
-          <IconTrash size={16} />
-        </button>
-      </form>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Remove"
+        className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-red-950/40 hover:text-red-400"
+      >
+        <IconTrash size={16} />
+      </button>
     </div>
   );
 }
 
-function EmptySlot({ month, position }: { month: string; position: number }) {
+function EmptySlot({
+  position,
+  onPick,
+}: {
+  position: number;
+  onPick: (s: Suggestion) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Suggestion[]>([]);
   const [searching, setSearching] = useState(false);
-  const [picking, setPicking] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function onChange(v: string) {
@@ -147,17 +247,8 @@ function EmptySlot({ month, position }: { month: string; position: number }) {
     }, 300);
   }
 
-  async function pick(s: Suggestion) {
-    setPicking(true);
-    const fd = new FormData();
-    fd.set("month", month);
-    fd.set("position", String(position));
-    fd.set("title", s.title);
-    fd.set("artist", s.artist);
-    fd.set("cover_url", s.coverUrl ?? "");
-    fd.set("external_id", String(s.id));
-    await setMonthlyFavorite(fd);
-    setPicking(false);
+  function pick(s: Suggestion) {
+    onPick(s);
     setOpen(false);
     setQuery("");
     setResults([]);
@@ -209,7 +300,6 @@ function EmptySlot({ month, position }: { month: string; position: number }) {
             <li key={s.id}>
               <button
                 type="button"
-                disabled={picking}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(s)}
                 className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-zinc-800"
