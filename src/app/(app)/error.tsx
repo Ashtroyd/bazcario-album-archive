@@ -10,7 +10,7 @@ export default function Error({
   return (
     <div className="card mx-auto max-w-md text-center">
       <h2 className="text-lg font-semibold">Something went wrong</h2>
-      <p className="mt-1 text-sm text-zinc-400">
+      <p className="mt-1 text-sm text-muted">
         {error.message || "An unexpected error occurred."}
       </p>
       <button onClick={reset} className="btn btn-primary mt-4">

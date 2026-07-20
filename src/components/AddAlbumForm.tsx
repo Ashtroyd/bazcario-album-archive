@@ -14,7 +14,7 @@ type Suggestion = {
 };
 
 const fileInputCls =
-  "block w-full text-xs text-zinc-400 file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-zinc-800 file:px-2 file:py-1 file:text-zinc-200";
+  "block w-full text-xs text-muted file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-ivory file:px-2 file:py-1 file:text-body";
 
 export function AddAlbumForm() {
   const [title, setTitle] = useState("");
@@ -122,19 +122,19 @@ export function AddAlbumForm() {
           className="input"
         />
         {searching && (
-          <span className="absolute top-9 right-3 animate-pulse text-xs text-zinc-500">
+          <span className="absolute top-9 right-3 animate-pulse text-xs text-muted">
             searching…
           </span>
         )}
         {open && suggestions.length > 0 && (
-          <ul className="absolute z-30 mt-1 max-h-80 w-full overflow-auto rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl">
+          <ul className="absolute z-30 mt-1 max-h-80 w-full overflow-auto rounded-lg border border-line bg-surface shadow-[0_12px_28px_rgba(38,37,33,0.18)]">
             {suggestions.map((s) => (
               <li key={s.id}>
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => pick(s)}
-                  className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-zinc-800"
+                  className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-ivory"
                 >
                   <CoverImage
                     url={s.coverUrl}
@@ -142,10 +142,10 @@ export function AddAlbumForm() {
                     className="h-10 w-10 shrink-0 rounded"
                   />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">
+                    <span className="block truncate text-sm font-medium text-ink">
                       {s.title}
                     </span>
-                    <span className="block truncate text-xs text-zinc-400">
+                    <span className="block truncate text-xs text-muted">
                       {s.artist}
                       {s.year ? ` · ${s.year}` : ""}
                     </span>
@@ -156,9 +156,9 @@ export function AddAlbumForm() {
           </ul>
         )}
         {loadingPick && (
-          <p className="mt-1 text-xs text-violet-400">Loading album details…</p>
+          <p className="mt-1 text-xs text-accent">Loading album details…</p>
         )}
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="mt-1 text-xs text-muted">
           Or fill everything in manually below.
         </p>
       </div>
@@ -189,7 +189,7 @@ export function AddAlbumForm() {
               className={fileInputCls}
             />
           </div>
-          {fetchMsg && <p className="text-xs text-amber-400">{fetchMsg}</p>}
+          {fetchMsg && <p className="text-xs text-star">{fetchMsg}</p>}
         </div>
 
         {/* Fields column */}
@@ -256,7 +256,7 @@ export function AddAlbumForm() {
               <button
                 type="button"
                 onClick={addTrack}
-                className="text-xs text-violet-400 hover:underline"
+                className="text-xs text-accent hover:underline"
               >
                 + Add track
               </button>
@@ -264,7 +264,7 @@ export function AddAlbumForm() {
             <div className="space-y-2">
               {tracks.map((t, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="w-6 text-right text-xs text-zinc-500">
+                  <span className="w-6 text-right text-xs text-muted">
                     {i + 1}
                   </span>
                   <input
@@ -278,7 +278,7 @@ export function AddAlbumForm() {
                     type="button"
                     onClick={() => removeTrack(i)}
                     aria-label="Remove track"
-                    className="btn btn-ghost px-2 py-1 text-zinc-500"
+                    className="btn btn-ghost px-2 py-1 text-muted"
                   >
                     ✕
                   </button>

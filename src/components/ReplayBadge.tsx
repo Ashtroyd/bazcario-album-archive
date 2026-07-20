@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import type { ReplayValue } from "@/lib/types";
 
 const STYLES: Record<ReplayValue, string> = {
-  Low: "border-zinc-700 bg-zinc-800/60 text-zinc-400",
-  Medium: "border-amber-800/70 bg-amber-950/40 text-amber-300",
-  High: "border-lime-800/70 bg-lime-950/40 text-lime-300",
-  "Very High": "border-emerald-700/70 bg-emerald-950/50 text-emerald-300",
+  Low: "border-line bg-ivory text-muted",
+  Medium: "border-star/40 bg-star/10 text-star",
+  High: "border-sage/40 bg-sage-soft text-sage",
+  "Very High": "border-sage/60 bg-sage-soft text-sage",
 };
 
 export function ReplayBadge({

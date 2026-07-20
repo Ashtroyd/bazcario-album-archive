@@ -13,7 +13,7 @@ export function AlbumCard({
   return (
     <Link
       href={`/album/${album.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-600 hover:shadow-lg hover:shadow-black/30"
+      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_28px_rgba(38,37,33,0.14)]"
     >
       <div className="relative aspect-square w-full">
         <CoverImage
@@ -22,19 +22,19 @@ export function AlbumCard({
           className="h-full w-full transition duration-300 group-hover:scale-[1.04]"
         />
         {myScore != null && (
-          <span className="absolute top-2 right-2 rounded-lg bg-black/70 px-2 py-1 text-sm backdrop-blur">
+          <span className="absolute top-2 right-2 rounded-lg bg-surface/90 px-2 py-1 text-sm shadow-sm backdrop-blur">
             <ScoreBadge score={myScore} />
           </span>
         )}
       </div>
       <div className="flex flex-1 flex-col p-3">
-        <div className="truncate font-medium" title={album.title}>
+        <div className="truncate font-medium text-ink" title={album.title}>
           {album.title}
         </div>
-        <div className="truncate text-sm text-zinc-400" title={album.artist}>
+        <div className="truncate text-sm text-muted" title={album.artist}>
           {album.artist}
         </div>
-        <div className="mt-1 flex gap-1.5 text-xs text-zinc-500">
+        <div className="mt-1 flex gap-1.5 text-xs text-muted">
           {album.release_year && <span>{album.release_year}</span>}
           {album.genre && (
             <>

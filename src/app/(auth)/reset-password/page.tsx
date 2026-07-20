@@ -36,10 +36,12 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="card w-full max-w-sm">
-      <h2 className="mb-4 text-lg font-semibold">Set a new password</h2>
+      <h2 className="mb-4 font-serif text-xl font-semibold text-ink">
+        Set a new password
+      </h2>
       <form onSubmit={onSubmit} className="space-y-3">
         {error && (
-          <p className="rounded-lg border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+          <p className="rounded-lg border border-accent/40 bg-accent-soft px-3 py-2 text-sm text-accent">
             {error}
           </p>
         )}

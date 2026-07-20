@@ -69,8 +69,8 @@ export default async function LibraryPage({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Library</h1>
-        <span className="text-sm text-zinc-500">
+        <h1 className="font-serif text-2xl font-bold text-ink">Library</h1>
+        <span className="text-sm text-muted">
           {list.length} album{list.length === 1 ? "" : "s"}
         </span>
       </div>
@@ -78,11 +78,11 @@ export default async function LibraryPage({
       <LibraryFilters genres={genres} years={years} />
 
       {list.length === 0 ? (
-        <div className="card text-center text-sm text-zinc-400">
+        <div className="card text-center text-sm text-muted">
           {albums.length === 0 ? (
             <>
               No albums yet.{" "}
-              <Link href="/album/new" className="text-violet-400 hover:underline">
+              <Link href="/album/new" className="text-accent hover:underline">
                 Add the first one →
               </Link>
             </>

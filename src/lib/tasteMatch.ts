@@ -27,9 +27,9 @@ export function computeTasteMatch(
 
 /** Tailwind text color for a taste-match %. */
 export function matchColor(pct: number | null): string {
-  if (pct == null) return "text-zinc-400";
-  if (pct >= 90) return "text-emerald-400";
-  if (pct >= 75) return "text-lime-400";
-  if (pct >= 60) return "text-amber-400";
-  return "text-orange-400";
+  if (pct == null) return "text-muted";
+  if (pct >= 90) return "text-sage";
+  if (pct >= 75) return "text-star";
+  if (pct >= 60) return "text-accent";
+  return "text-accent/75";
 }

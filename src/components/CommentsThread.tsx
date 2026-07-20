@@ -95,7 +95,7 @@ export function CommentsThread({
       </form>
 
       {comments.length === 0 ? (
-        <p className="text-sm text-zinc-500">No comments yet. Start the thread.</p>
+        <p className="text-sm text-muted">No comments yet. Start the thread.</p>
       ) : (
         <ul className="space-y-3">
           {comments.map((c) => (
@@ -107,23 +107,23 @@ export function CommentsThread({
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium text-ink">
                     {c.author?.display_name ?? "User"}
                   </span>
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-muted">
                     {formatDate(c.created_at)}
                   </span>
                   {c.user_id === me.id && (
                     <button
                       type="button"
                       onClick={() => remove(c.id)}
-                      className="ml-auto text-xs text-zinc-500 hover:text-red-400"
+                      className="ml-auto text-xs text-muted hover:text-accent"
                     >
                       delete
                     </button>
                   )}
                 </div>
-                <p className="text-sm whitespace-pre-wrap text-zinc-300">
+                <p className="text-sm whitespace-pre-wrap text-body">
                   {c.body}
                 </p>
               </div>

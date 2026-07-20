@@ -11,15 +11,15 @@ export default async function LoginPage({
 
   return (
     <div className="card w-full max-w-sm">
-      <h2 className="mb-4 text-lg font-semibold">Sign in</h2>
+      <h2 className="mb-4 font-serif text-xl font-semibold text-ink">Sign in</h2>
 
       {sp.message && (
-        <p className="mb-3 rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-300">
+        <p className="mb-3 rounded-lg border border-sage/40 bg-sage-soft px-3 py-2 text-sm text-sage">
           {sp.message}
         </p>
       )}
       {sp.error && (
-        <p className="mb-3 rounded-lg border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+        <p className="mb-3 rounded-lg border border-accent/40 bg-accent-soft px-3 py-2 text-sm text-accent">
           {sp.error}
         </p>
       )}
@@ -57,7 +57,7 @@ export default async function LoginPage({
         <div className="text-right">
           <Link
             href="/forgot-password"
-            className="text-xs text-violet-400 hover:underline"
+            className="text-xs text-accent hover:underline"
           >
             Forgot password?
           </Link>
@@ -67,9 +67,9 @@ export default async function LoginPage({
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-zinc-400">
+      <p className="mt-4 text-center text-sm text-muted">
         No account?{" "}
-        <Link href="/signup" className="text-violet-400 hover:underline">
+        <Link href="/signup" className="text-accent hover:underline">
           Sign up
         </Link>
       </p>

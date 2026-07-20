@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b; /* zinc-950 */
-  --foreground: #fafafa; /* zinc-50 */
+  color-scheme: light;
+  /* Warm, Claude-inspired palette (light) */
+  --paper: #faf9f5;
+  --ivory: #f0eee6;
+  --surface: #ffffff;
+  --ink: #262521;
+  --body: #403d36;
+  --muted: #8a8578;
+  --line: #e8e5db;
+  --line-strong: #d8d4c7;
+  --accent: #c96442;
+  --accent-hover: #ae5234;
+  --accent-soft: #f6e9e2;
+  --star: #cf8a3b;
+  --sage: #66805c;
+  --sage-soft: #e9eee3;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  /* Warm charcoal dark palette */
+  --paper: #1b1a18;
+  --ivory: #2a2824;
+  --surface: #242220;
+  --ink: #f4f2ec;
+  --body: #cec9bf;
+  --muted: #948e82;
+  --line: #34322d;
+  --line-strong: #46423a;
+  --accent: #d5795a;
+  --accent-hover: #e58d6c;
+  --accent-soft: #3a2a22;
+  --star: #dc9e52;
+  --sage: #8fa883;
+  --sage-soft: #2b3427;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-ivory: var(--ivory);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-star: var(--star);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
 }
 
 html {
   /* Visible flash when tapping links/buttons on touch devices. */
-  -webkit-tap-highlight-color: rgba(139, 92, 246, 0.18);
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--body);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  outline-offset: 2px;
 }
 
 /* Press feedback on touch devices (no hover to rely on). */
@@ -29,37 +88,37 @@ body {
   button:active,
   [role="button"]:active,
   label:active {
-    opacity: 0.55;
+    opacity: 0.6;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 transition;
+    @apply rounded-xl border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition;
   }
   .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply bg-violet-600 text-white hover:bg-violet-500;
+    @apply bg-accent text-white hover:bg-accent-hover;
   }
   .btn-ghost {
-    @apply text-zinc-300 hover:bg-zinc-800 hover:text-white;
+    @apply text-body hover:bg-ivory hover:text-ink;
   }
   .btn-outline {
-    @apply border border-zinc-700 text-zinc-200 hover:bg-zinc-800;
+    @apply border border-line-strong text-body hover:bg-ivory hover:text-ink;
   }
   .btn-danger {
-    @apply text-red-400 hover:bg-red-950/40 hover:text-red-300;
+    @apply text-accent hover:bg-accent-soft;
   }
   .input {
-    @apply w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500;
+    @apply w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-muted outline-none transition-colors focus:border-line-strong;
   }
   .label {
-    @apply mb-1 block text-xs font-medium tracking-wide text-zinc-400 uppercase;
+    @apply mb-1 block text-xs font-medium tracking-wide text-muted uppercase;
   }
   .chip {
-    @apply inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-0.5 text-xs text-zinc-300;
+    @apply inline-flex items-center rounded-full border border-line bg-ivory px-2.5 py-0.5 text-xs text-body;
   }
 }
 
@@ -75,7 +134,7 @@ body {
   }
 }
 .animate-page-in {
-  animation: page-in 0.28s ease-out;
+  animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Staggered list-item entrance (feed, notifications). */
@@ -90,7 +149,7 @@ body {
   }
 }
 .list-in {
-  animation: list-in 0.35s ease-out both;
+  animation: list-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

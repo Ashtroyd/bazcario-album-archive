@@ -23,9 +23,9 @@ export function ScoreCircle({
   label?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 px-5 py-3">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-line bg-surface px-5 py-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)]">
       <ScoreBadge score={score} className="text-3xl" />
-      <span className="mt-0.5 text-[10px] tracking-wide text-zinc-500 uppercase">
+      <span className="mt-0.5 text-[10px] tracking-wide text-muted uppercase">
         {label}
       </span>
     </div>

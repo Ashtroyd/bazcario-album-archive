@@ -76,7 +76,7 @@ export function FriendsLists({
     <>
       {incoming.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
             Requests ({incoming.length})
           </h2>
           {incoming.map((r) => (
@@ -112,7 +112,7 @@ export function FriendsLists({
 
       {outgoing.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
             Sent ({outgoing.length})
           </h2>
           {outgoing.map((r) => (
@@ -139,11 +139,11 @@ export function FriendsLists({
       )}
 
       <section className="space-y-2">
-        <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+        <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
           Your friends ({accepted.length})
         </h2>
         {accepted.length === 0 ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted">
             No friends yet. Search above to add some.
           </p>
         ) : (

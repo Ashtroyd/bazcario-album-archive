@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const selectCls =
-  "rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm outline-none focus:border-violet-500";
+  "rounded-xl border border-line bg-paper px-2 py-2 text-sm text-body outline-none transition-colors focus:border-line-strong";
 
 export function LibraryFilters({
   genres,

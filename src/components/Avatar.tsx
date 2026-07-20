@@ -23,7 +23,7 @@ export function Avatar({
   return (
     <div
       style={style}
-      className="flex items-center justify-center rounded-full bg-violet-700 font-medium text-white"
+      className="flex items-center justify-center rounded-full bg-accent font-medium text-white"
     >
       <span style={{ fontSize: size * 0.4 }}>{initials(name)}</span>
     </div>

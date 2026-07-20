@@ -126,19 +126,22 @@ export default async function AlbumDetailPage({
     (t) => t.id === myRating?.least_favorite_track_id,
   )?.name;
 
-  // Apple-Music-style tint from the cover art (falls back to the dark theme).
+  // Apple-Music-style tint from the cover art (falls back to a warm neutral).
   const colors = (a.cover_colors as CoverColors | null) ?? null;
-  const bg = colors?.bg ?? "#18181b";
+  const bg = colors?.bg ?? "#3a3632";
   const heroText = colors?.text ?? "#ffffff";
-  const accent = colors?.accent ?? "#a78bfa";
-  const heroGradient = `linear-gradient(180deg, ${bg} 0%, ${bg}00 82%)`;
+  const accent = colors?.accent ?? "#f4d9cc";
+  // A contained color card floating on the cream page, rather than a full-bleed
+  // gradient fading into a (now light) background. Subtle top-down darkening
+  // adds depth while keeping heroText/accent contrast intact.
+  const heroGradient = `linear-gradient(165deg, ${bg} 0%, ${bg} 55%, rgba(0,0,0,0.14) 100%)`;
   const chipStyle = { color: heroText, borderColor: `${heroText}33` };
 
   return (
     <div className="space-y-8">
-      {/* Cover-tinted hero */}
+      {/* Cover-tinted hero card */}
       <div
-        className="relative -mx-4 -mt-6 px-4 pt-10 pb-8"
+        className="relative overflow-hidden rounded-2xl px-4 pt-10 pb-8 shadow-[0_8px_24px_rgba(38,37,33,0.16)]"
         style={{ background: heroGradient }}
       >
         <div className="absolute top-3 right-4">
@@ -236,7 +239,7 @@ export default async function AlbumDetailPage({
         {/* Friends who also rated */}
         {others.length > 0 && (
           <section>
-            <h2 className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
               Also rated by
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -244,14 +247,14 @@ export default async function AlbumDetailPage({
                 <Link
                   key={o.user_id}
                   href={`/album/${id}/compare/${o.user_id}`}
-                  className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 transition hover:border-zinc-600"
+                  className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition hover:border-line-strong"
                 >
                   <Avatar
                     url={o.profiles?.avatar_url}
                     name={o.profiles?.display_name}
                     size={28}
                   />
-                  <span className="text-sm">
+                  <span className="text-sm text-body">
                     {o.profiles?.display_name ?? "Friend"}
                   </span>
                   <ScoreBadge
@@ -259,7 +262,7 @@ export default async function AlbumDetailPage({
                       o.overall_rating != null ? Number(o.overall_rating) : null
                     }
                   />
-                  <span className="text-xs text-violet-400">compare →</span>
+                  <span className="text-xs text-accent">compare →</span>
                 </Link>
               ))}
             </div>
@@ -268,13 +271,15 @@ export default async function AlbumDetailPage({
 
         {/* Editable track ratings */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Your track ratings</h2>
+          <h2 className="font-serif text-lg font-semibold text-ink">
+            Your track ratings
+          </h2>
           {tracks.length === 0 ? (
-            <p className="text-sm text-zinc-500">This album has no tracks yet.</p>
+            <p className="text-sm text-muted">This album has no tracks yet.</p>
           ) : (
             <div className="card">
               <TrackRatingTable albumId={a.id} tracks={tableTracks} />
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-muted">
                 Your overall updates automatically as you rate tracks.
               </p>
             </div>
@@ -283,13 +288,15 @@ export default async function AlbumDetailPage({
 
         {/* Album-level details */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Album details</h2>
+          <h2 className="font-serif text-lg font-semibold text-ink">
+            Album details
+          </h2>
           <RatingMetaForm albumId={a.id} tracks={tracks} rating={myRating} />
         </section>
 
         {/* Comments */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Comments</h2>
+          <h2 className="font-serif text-lg font-semibold text-ink">Comments</h2>
           <div className="card">
             <Comments
               targetType="album"

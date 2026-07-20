@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signout } from "@/app/actions/auth";
 import { Avatar } from "@/components/Avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { IconBell, IconHeadphones } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -25,14 +26,16 @@ export function AppNav({
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-line bg-paper/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-4">
         <Link
           href="/"
-          className="mr-2 flex items-center gap-2 font-semibold whitespace-nowrap"
+          className="mr-2 flex items-center gap-2 whitespace-nowrap"
         >
-          <IconHeadphones size={22} className="text-violet-400" />
-          <span className="hidden sm:inline">Archive</span>
+          <IconHeadphones size={22} className="text-accent" />
+          <span className="hidden font-serif text-lg font-semibold text-ink sm:inline">
+            Archive
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">
@@ -41,10 +44,10 @@ export function AppNav({
               key={l.href}
               href={l.href}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm transition",
+                "rounded-full px-3 py-1.5 text-sm transition-colors",
                 isActive(l.href)
-                  ? "bg-zinc-800 text-white"
-                  : "text-zinc-400 hover:text-white",
+                  ? "bg-ivory text-ink"
+                  : "text-body hover:bg-ivory hover:text-ink",
               )}
             >
               {l.label}
@@ -60,19 +63,20 @@ export function AppNav({
             <span className="text-base leading-none">+</span>
             <span className="hidden sm:inline">Add album</span>
           </Link>
+          <ThemeToggle />
           <Link
             href="/notifications"
             title="Notifications"
             className={cn(
-              "relative hidden rounded-lg px-2 py-1.5 transition sm:inline-flex",
+              "relative hidden rounded-full px-2 py-1.5 transition-colors sm:inline-flex",
               isActive("/notifications")
-                ? "bg-zinc-800 text-white"
-                : "text-zinc-300 hover:bg-zinc-800 hover:text-white",
+                ? "bg-ivory text-ink"
+                : "text-body hover:bg-ivory hover:text-ink",
             )}
           >
             <IconBell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-bold text-white">
+              <span className="absolute top-0 right-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
@@ -80,7 +84,7 @@ export function AppNav({
           <Link
             href="/profile"
             title="Profile"
-            className="rounded-full ring-2 ring-zinc-700 transition hover:ring-violet-500"
+            className="rounded-full ring-2 ring-line-strong transition hover:ring-accent"
           >
             <Avatar url={profile.avatar_url} name={profile.display_name} size={34} />
           </Link>

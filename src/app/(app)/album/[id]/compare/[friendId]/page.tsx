@@ -28,10 +28,10 @@ type RatingRow = {
 };
 
 function gapBg(gap: number | null): string {
-  if (gap == null) return "bg-zinc-900/40";
-  if (gap >= 3) return "bg-red-950/40";
-  if (gap >= 1.5) return "bg-amber-950/25";
-  return "bg-zinc-900/40";
+  if (gap == null) return "bg-surface";
+  if (gap >= 3) return "bg-accent-soft";
+  if (gap >= 1.5) return "bg-star/10";
+  return "bg-surface";
 }
 
 export default async function ComparePage({
@@ -147,16 +147,16 @@ export default async function ComparePage({
     matchN > 0 ? Math.round(100 * (1 - matchSum / matchN / 10)) : null;
 
   const colors = (a.cover_colors as CoverColors | null) ?? null;
-  const bg = colors?.bg ?? "#18181b";
+  const bg = colors?.bg ?? "#3a3632";
   const heroText = colors?.text ?? "#ffffff";
-  const accent = colors?.accent ?? "#a78bfa";
-  const heroGradient = `linear-gradient(180deg, ${bg} 0%, ${bg}00 100%)`;
+  const accent = colors?.accent ?? "#f4d9cc";
+  const heroGradient = `linear-gradient(165deg, ${bg} 0%, ${bg} 55%, rgba(0,0,0,0.14) 100%)`;
 
   return (
     <div className="space-y-6">
-      {/* Cover-tinted header */}
+      {/* Cover-tinted header card */}
       <div
-        className="-mx-4 -mt-6 px-4 pt-6 pb-5"
+        className="overflow-hidden rounded-2xl px-4 pt-6 pb-5 shadow-[0_8px_24px_rgba(38,37,33,0.16)]"
         style={{ background: heroGradient }}
       >
         <div className="mx-auto flex max-w-4xl items-center gap-4">
@@ -224,7 +224,7 @@ export default async function ComparePage({
         </div>
 
         {!theyHaveData ? (
-          <div className="card space-y-3 text-sm text-zinc-400">
+          <div className="card space-y-3 text-sm text-muted">
             <p>
               Nothing to compare yet — {friendName} hasn&apos;t rated this
               album (or you&apos;re not friends).
@@ -245,7 +245,7 @@ export default async function ComparePage({
           <>
             {/* Album details, side by side */}
             <section className="space-y-2">
-              <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+              <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
                 Album details
               </h2>
               <div className="grid grid-cols-2 gap-3">
@@ -255,10 +255,10 @@ export default async function ComparePage({
             </section>
 
             {biggest && biggest.gap! > 0 && (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-sm">
-                <span className="text-zinc-400">Biggest gap: </span>
-                <span className="font-medium">{biggest.name}</span>{" "}
-                <span className="text-zinc-400">
+              <div className="rounded-lg border border-line bg-surface px-4 py-3 text-sm shadow-[0_1px_2px_rgba(38,37,33,0.06)]">
+                <span className="text-muted">Biggest gap: </span>
+                <span className="font-medium text-ink">{biggest.name}</span>{" "}
+                <span className="text-muted">
                   — you {formatScore(biggest.mine?.rating ?? null)} vs{" "}
                   {friendName} {formatScore(biggest.theirs?.rating ?? null)} (Δ{" "}
                   {formatScore(biggest.gap)})
@@ -268,7 +268,7 @@ export default async function ComparePage({
 
             {/* Per-track comparison */}
             <section className="space-y-2">
-              <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+              <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
                 Tracks
               </h2>
               <div className="space-y-2">
@@ -276,15 +276,15 @@ export default async function ComparePage({
                   <div
                     key={r.id}
                     className={cn(
-                      "rounded-xl border border-zinc-800 p-3",
+                      "rounded-xl border border-line p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)]",
                       gapBg(r.gap),
                     )}
                   >
                     <div className="mb-2 flex items-center gap-2">
-                      <span className="text-xs text-zinc-500">{r.order}</span>
-                      <span className="font-medium">{r.name}</span>
+                      <span className="text-xs text-muted">{r.order}</span>
+                      <span className="font-medium text-ink">{r.name}</span>
                       {r.gap != null && r.gap > 0 && (
-                        <span className="ml-auto text-xs text-zinc-500">
+                        <span className="ml-auto text-xs text-muted">
                           Δ {formatScore(r.gap)}
                         </span>
                       )}
@@ -302,7 +302,7 @@ export default async function ComparePage({
 
         {/* Shared comments */}
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
             Comments
           </h2>
           <div className="card">
@@ -335,7 +335,7 @@ function PersonHeader({
     <div className="card flex items-center gap-3 py-3">
       <Avatar url={avatarUrl} name={avatarName ?? name} size={40} />
       <div className="min-w-0">
-        <div className="truncate text-sm font-medium">{name}</div>
+        <div className="truncate text-sm font-medium text-ink">{name}</div>
         {overall != null ? (
           <div
             className="text-2xl font-bold tabular-nums"
@@ -344,7 +344,7 @@ function PersonHeader({
             {formatScore(overall)}
           </div>
         ) : (
-          <div className="text-2xl font-bold text-zinc-600">—</div>
+          <div className="text-2xl font-bold text-muted">—</div>
         )}
       </div>
     </div>
@@ -366,29 +366,29 @@ function DetailColumn({
   return (
     <div className="card space-y-1.5 text-sm">
       {!hasAny ? (
-        <p className="text-zinc-600">No details.</p>
+        <p className="text-muted">No details.</p>
       ) : (
         <>
           {rating?.first_listen_date && (
-            <div className="text-zinc-300">
-              <span className="text-zinc-500">First listen: </span>
+            <div className="text-body">
+              <span className="text-muted">First listen: </span>
               {formatDate(rating.first_listen_date)}
             </div>
           )}
           {fav && (
-            <div className="flex items-center gap-1.5 text-zinc-300">
-              <IconHeart size={13} className="shrink-0 text-zinc-500" />
-              <span className="text-zinc-500">Favourite:</span> {fav}
+            <div className="flex items-center gap-1.5 text-body">
+              <IconHeart size={13} className="shrink-0 text-muted" />
+              <span className="text-muted">Favourite:</span> {fav}
             </div>
           )}
           {least && (
-            <div className="flex items-center gap-1.5 text-zinc-300">
-              <IconMoon size={13} className="shrink-0 text-zinc-500" />
-              <span className="text-zinc-500">Least favourite:</span> {least}
+            <div className="flex items-center gap-1.5 text-body">
+              <IconMoon size={13} className="shrink-0 text-muted" />
+              <span className="text-muted">Least favourite:</span> {least}
             </div>
           )}
           {rating?.notes && (
-            <p className="whitespace-pre-wrap text-zinc-400">{rating.notes}</p>
+            <p className="whitespace-pre-wrap text-muted">{rating.notes}</p>
           )}
         </>
       )}
@@ -399,7 +399,7 @@ function DetailColumn({
 function TrackSide({ side, label }: { side: Side; label: string }) {
   return (
     <div className="min-w-0">
-      <div className="mb-0.5 text-[10px] tracking-wide text-zinc-500 uppercase sm:hidden">
+      <div className="mb-0.5 text-[10px] tracking-wide text-muted uppercase sm:hidden">
         {label}
       </div>
       <div className="flex items-center gap-2">
@@ -407,11 +407,11 @@ function TrackSide({ side, label }: { side: Side; label: string }) {
         <ReplayBadge value={side?.replay ?? null} />
       </div>
       {side?.notes ? (
-        <p className="mt-1 text-xs whitespace-pre-wrap text-zinc-400">
+        <p className="mt-1 text-xs whitespace-pre-wrap text-muted">
           {side.notes}
         </p>
       ) : side?.rating == null ? (
-        <p className="mt-1 text-xs text-zinc-600">not rated</p>
+        <p className="mt-1 text-xs text-muted">not rated</p>
       ) : null}
     </div>
   );

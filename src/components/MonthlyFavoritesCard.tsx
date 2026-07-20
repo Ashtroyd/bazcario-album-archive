@@ -14,14 +14,14 @@ export function MonthlyFavoritesCard({ picks }: { picks: MonthlyFavorite[] }) {
               alt=""
               className="aspect-square w-20 rounded-lg"
             />
-            <span className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
+            <span className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-white">
               {p.position}
             </span>
           </div>
-          <div className="mt-1 truncate text-xs font-medium" title={p.title}>
+          <div className="mt-1 truncate text-xs font-medium text-ink" title={p.title}>
             {p.title}
           </div>
-          <div className="truncate text-[11px] text-zinc-500" title={p.artist}>
+          <div className="truncate text-[11px] text-muted" title={p.artist}>
             {p.artist}
           </div>
         </li>

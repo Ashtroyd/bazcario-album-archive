@@ -14,14 +14,14 @@ export function CoverImage({
       <img
         src={url}
         alt={alt}
-        className={cn("bg-zinc-800 object-cover", className)}
+        className={cn("bg-ivory object-cover", className)}
       />
     );
   }
   return (
     <div
       className={cn(
-        "flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 text-3xl text-zinc-600",
+        "flex items-center justify-center bg-ivory font-serif text-3xl text-line-strong",
         className,
       )}
       aria-label={alt}

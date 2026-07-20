@@ -131,7 +131,7 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Profile</h1>
+        <h1 className="font-serif text-2xl font-bold text-ink">Profile</h1>
         <div className="flex items-center gap-2">
           <Link href="/favourites" className="btn btn-outline text-sm">
             Favourite songs
@@ -162,7 +162,7 @@ export default async function ProfilePage() {
                 name="avatar"
                 type="file"
                 accept="image/*"
-                className="block w-full max-w-full text-xs text-zinc-400 file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-zinc-800 file:px-2.5 file:py-1.5 file:text-zinc-200"
+                className="block w-full max-w-full text-xs text-muted file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-ivory file:px-2.5 file:py-1.5 file:text-body"
               />
             </div>
           </div>
@@ -193,7 +193,7 @@ export default async function ProfilePage() {
           <div>
             <label className="label">Visibility</label>
             <span className="chip">Friends-only (default)</span>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-muted">
               A public/private toggle is coming. For now, your ratings are
               visible only to you and your accepted friends.
             </p>
@@ -208,10 +208,10 @@ export default async function ProfilePage() {
         <div className="grid grid-cols-2 gap-4 self-start">
           {stats.map((s) => (
             <div key={s.label} className="card">
-              <div className="text-xs tracking-wide text-zinc-400 uppercase">
+              <div className="text-xs tracking-wide text-muted uppercase">
                 {s.label}
               </div>
-              <div className="mt-1 text-2xl font-bold">{s.value}</div>
+              <div className="mt-1 text-2xl font-bold text-ink">{s.value}</div>
             </div>
           ))}
         </div>
@@ -221,23 +221,23 @@ export default async function ProfilePage() {
         <>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="card">
-              <h2 className="mb-3 text-sm font-semibold">
+              <h2 className="mb-3 text-sm font-semibold text-ink">
                 Your rating distribution
               </h2>
               {trackScores.length > 0 ? (
-                <Bars data={distribution} colorClass="bg-violet-600" />
+                <Bars data={distribution} colorClass="bg-accent" />
               ) : (
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-muted">
                   Rate some tracks to see this.
                 </p>
               )}
             </div>
             <div className="card">
-              <h2 className="mb-3 text-sm font-semibold">Top genres</h2>
+              <h2 className="mb-3 text-sm font-semibold text-ink">Top genres</h2>
               {topGenres.length > 0 ? (
-                <Bars data={topGenres} colorClass="bg-emerald-600" />
+                <Bars data={topGenres} colorClass="bg-sage" />
               ) : (
-                <p className="text-sm text-zinc-500">No genres yet.</p>
+                <p className="text-sm text-muted">No genres yet.</p>
               )}
             </div>
           </div>
@@ -249,12 +249,12 @@ export default async function ProfilePage() {
               sub={topAlbum ? formatScore(topAlbum.score) : undefined}
             />
             <div className="card">
-              <div className="text-[10px] tracking-wide text-zinc-500 uppercase">
+              <div className="text-[10px] tracking-wide text-muted uppercase">
                 Favourite track
               </div>
               <FavoriteTrackPicker tracks={trackList} current={favTrackId} />
               {favTrack?.album && (
-                <div className="mt-1 truncate text-xs text-zinc-500">
+                <div className="mt-1 truncate text-xs text-muted">
                   {favTrack.album}
                 </div>
               )}
@@ -273,7 +273,7 @@ export default async function ProfilePage() {
 
 function Bars({
   data,
-  colorClass = "bg-violet-600",
+  colorClass = "bg-accent",
 }: {
   data: { label: string; value: number }[];
   colorClass?: string;
@@ -283,16 +283,16 @@ function Bars({
     <div className="space-y-1.5">
       {data.map((d) => (
         <div key={d.label} className="flex items-center gap-2 text-xs">
-          <span className="w-14 shrink-0 truncate text-right text-zinc-400">
+          <span className="w-14 shrink-0 truncate text-right text-muted">
             {d.label}
           </span>
-          <div className="h-4 flex-1 overflow-hidden rounded bg-zinc-800/60">
+          <div className="h-4 flex-1 overflow-hidden rounded bg-ivory">
             <div
               className={cn("h-full rounded", colorClass)}
               style={{ width: `${(d.value / max) * 100}%` }}
             />
           </div>
-          <span className="w-6 shrink-0 text-zinc-500">{d.value}</span>
+          <span className="w-6 shrink-0 text-muted">{d.value}</span>
         </div>
       ))}
     </div>
@@ -310,13 +310,13 @@ function Highlight({
 }) {
   return (
     <div className="card">
-      <div className="text-[10px] tracking-wide text-zinc-500 uppercase">
+      <div className="text-[10px] tracking-wide text-muted uppercase">
         {label}
       </div>
-      <div className="mt-1 truncate font-semibold" title={value}>
+      <div className="mt-1 truncate font-semibold text-ink" title={value}>
         {value}
       </div>
-      {sub && <div className="text-xs text-zinc-500">{sub}</div>}
+      {sub && <div className="text-xs text-muted">{sub}</div>}
     </div>
   );
 }

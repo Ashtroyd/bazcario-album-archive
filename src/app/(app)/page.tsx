@@ -52,23 +52,23 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">
+        <h1 className="font-serif text-2xl font-bold text-ink">
           Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
         </h1>
-        <p className="text-zinc-400">Your album ratings, synced everywhere.</p>
+        <p className="text-muted">Your album ratings, synced everywhere.</p>
       </div>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Your albums</h2>
-          <Link href="/albums" className="text-sm text-violet-400 hover:underline">
+          <h2 className="font-serif text-lg font-semibold text-ink">Your albums</h2>
+          <Link href="/albums" className="text-sm text-accent hover:underline">
             View all →
           </Link>
         </div>
         {myAlbums.length === 0 ? (
-          <div className="card text-sm text-zinc-400">
+          <div className="card text-sm text-muted">
             You haven&apos;t rated anything yet.{" "}
-            <Link href="/album/new" className="text-violet-400 hover:underline">
+            <Link href="/album/new" className="text-accent hover:underline">
               Add an album →
             </Link>
           </div>
@@ -89,20 +89,20 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2 className="font-serif text-lg font-semibold text-ink">
             {formatMonthLabel(currentMonth)} favourites
           </h2>
           <Link
             href="/favourites"
-            className="text-sm text-violet-400 hover:underline"
+            className="text-sm text-accent hover:underline"
           >
             {myPicks.length > 0 ? "Edit →" : "Add songs →"}
           </Link>
         </div>
         {myPicks.length === 0 ? (
-          <div className="card text-sm text-zinc-400">
+          <div className="card text-sm text-muted">
             You haven&apos;t picked any favourite songs this month yet.{" "}
-            <Link href="/favourites" className="text-violet-400 hover:underline">
+            <Link href="/favourites" className="text-accent hover:underline">
               Add up to 5 →
             </Link>
           </div>
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
           <div className="space-y-3 pt-1">
             {friendsPicks.map((f) => (
               <div key={f.userId} className="card">
-                <div className="mb-2 text-sm font-medium text-zinc-300">
+                <div className="mb-2 text-sm font-medium text-body">
                   {f.name ?? "A friend"}&apos;s picks
                 </div>
                 <MonthlyFavoritesCard picks={f.picks} />
@@ -127,7 +127,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Activity</h2>
+        <h2 className="font-serif text-lg font-semibold text-ink">Activity</h2>
         <ActivityFeed items={activity} />
       </section>
     </div>

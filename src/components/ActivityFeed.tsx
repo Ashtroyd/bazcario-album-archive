@@ -60,9 +60,9 @@ function Verb({ item }: { item: ActivityItem }) {
 export function ActivityFeed({ items }: { items: ActivityItem[] }) {
   if (items.length === 0) {
     return (
-      <div className="card text-sm text-zinc-400">
+      <div className="card text-sm text-muted">
         No friend activity yet.{" "}
-        <Link href="/friends" className="text-violet-400 hover:underline">
+        <Link href="/friends" className="text-accent hover:underline">
           Add friends →
         </Link>
       </div>
@@ -79,27 +79,27 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
         >
           <Link
             href={linkFor(item)}
-            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-700"
+            className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_28px_rgba(38,37,33,0.14)]"
           >
             <div className="relative shrink-0">
               <Avatar url={item.actor.avatar} name={item.actor.name} size={38} />
-              <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300">
+              <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line bg-surface text-body">
                 {ICON[item.type]({ size: 11 })}
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm">
-                <span className="font-medium">
+              <p className="text-sm text-body">
+                <span className="font-medium text-ink">
                   {item.actor.name ?? "A friend"}
                 </span>{" "}
                 <Verb item={item} />
               </p>
               {item.text && (
-                <p className="truncate text-xs text-zinc-500">
+                <p className="truncate text-xs text-muted">
                   &ldquo;{item.text}&rdquo;
                 </p>
               )}
-              <p className="text-[11px] text-zinc-500">{timeAgo(item.at)}</p>
+              <p className="text-[11px] text-muted">{timeAgo(item.at)}</p>
             </div>
             {item.type === "rating" && item.score != null && (
               <ScoreBadge score={item.score} className="shrink-0" />

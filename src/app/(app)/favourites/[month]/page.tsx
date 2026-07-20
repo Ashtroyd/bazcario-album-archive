@@ -24,13 +24,15 @@ export default async function FavouritesMonthPage({
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <Link href="/favourites" className="text-sm text-zinc-400 hover:underline">
+      <Link href="/favourites" className="text-sm text-muted hover:underline">
         ← Favourite songs
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold">{formatMonthLabel(month)}</h1>
-        <p className="text-zinc-400">Your top 5 for this month.</p>
+        <h1 className="font-serif text-2xl font-bold text-ink">
+          {formatMonthLabel(month)}
+        </h1>
+        <p className="text-muted">Your top 5 for this month.</p>
       </div>
 
       <MonthlyFavoritesPicker month={month} picks={picks} />

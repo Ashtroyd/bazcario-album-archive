@@ -15,15 +15,14 @@ export function formatScore(
   return String(Math.round(num * 100) / 100);
 }
 
-/** Tailwind text color class bucketed by score. */
+/** Tailwind text color class bucketed by score (warm minimal palette). */
 export function scoreColor(n: number | null | undefined): string {
-  if (n === null || n === undefined || Number.isNaN(n))
-    return "text-zinc-400";
-  if (n >= 9) return "text-emerald-500";
-  if (n >= 7.5) return "text-lime-500";
-  if (n >= 6) return "text-amber-500";
-  if (n >= 4) return "text-orange-500";
-  return "text-red-500";
+  if (n === null || n === undefined || Number.isNaN(n)) return "text-muted";
+  if (n >= 9) return "text-sage";
+  if (n >= 7.5) return "text-star";
+  if (n >= 6) return "text-accent";
+  if (n >= 4) return "text-accent/75";
+  return "text-muted";
 }
 
 /** Format an ISO date (or null) for display. */

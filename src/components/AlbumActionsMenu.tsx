@@ -74,7 +74,7 @@ export function AlbumActionsMenu({
   }
 
   const itemCls =
-    "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-800";
+    "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-body transition hover:bg-ivory hover:text-ink";
 
   return (
     <div ref={rootRef} className="relative">
@@ -89,9 +89,9 @@ export function AlbumActionsMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 py-1 shadow-2xl">
+        <div className="absolute right-0 z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-[0_12px_28px_rgba(38,37,33,0.18)]">
           <button type="button" onClick={shareCard} disabled={busy} className={itemCls}>
-            <IconShare size={16} className="text-zinc-400" />
+            <IconShare size={16} className="text-muted" />
             {busy ? "Preparing…" : "Share card"}
           </button>
 
@@ -102,10 +102,10 @@ export function AlbumActionsMenu({
                 onClick={() => fileRef.current?.click()}
                 className={itemCls}
               >
-                <IconImage size={16} className="text-zinc-400" />
+                <IconImage size={16} className="text-muted" />
                 Change cover
               </button>
-              <div className="my-1 h-px bg-zinc-800" />
+              <div className="my-1 h-px bg-line" />
               <form
                 action={deleteAlbum}
                 onSubmit={(e) => {
@@ -122,7 +122,7 @@ export function AlbumActionsMenu({
                 <input type="hidden" name="id" value={albumId} />
                 <button
                   type="submit"
-                  className={`${itemCls} text-red-400 hover:bg-red-950/40`}
+                  className={`${itemCls} text-accent hover:bg-accent-soft hover:text-accent`}
                 >
                   <IconTrash size={16} />
                   Delete album

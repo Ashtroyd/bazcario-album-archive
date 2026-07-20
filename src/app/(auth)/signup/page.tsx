@@ -10,10 +10,12 @@ export default async function SignupPage({
 
   return (
     <div className="card w-full max-w-sm">
-      <h2 className="mb-4 text-lg font-semibold">Create your account</h2>
+      <h2 className="mb-4 font-serif text-xl font-semibold text-ink">
+        Create your account
+      </h2>
 
       {sp.error && (
-        <p className="mb-3 rounded-lg border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+        <p className="mb-3 rounded-lg border border-accent/40 bg-accent-soft px-3 py-2 text-sm text-accent">
           {sp.error}
         </p>
       )}
@@ -66,9 +68,9 @@ export default async function SignupPage({
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-zinc-400">
+      <p className="mt-4 text-center text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="text-violet-400 hover:underline">
+        <Link href="/login" className="text-accent hover:underline">
           Sign in
         </Link>
       </p>

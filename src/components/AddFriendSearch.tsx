@@ -36,7 +36,7 @@ export function AddFriendSearch() {
 
   return (
     <div className="card space-y-3">
-      <h2 className="text-sm font-semibold">Add a friend</h2>
+      <h2 className="text-sm font-semibold text-ink">Add a friend</h2>
       <form onSubmit={doSearch} className="flex gap-2">
         <input
           value={q}
@@ -54,7 +54,7 @@ export function AddFriendSearch() {
       </form>
 
       {searched && results.length === 0 && (
-        <p className="text-sm text-zinc-500">No users found.</p>
+        <p className="text-sm text-muted">No users found.</p>
       )}
 
       {results.length > 0 && (
@@ -64,7 +64,7 @@ export function AddFriendSearch() {
             return (
               <li key={u.id} className="flex items-center gap-2">
                 <Avatar url={u.avatar_url} name={u.display_name} size={28} />
-                <span className="text-sm">{u.display_name ?? u.email}</span>
+                <span className="text-sm text-body">{u.display_name ?? u.email}</span>
                 <button
                   type="button"
                   disabled={sent}

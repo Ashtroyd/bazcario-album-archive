@@ -26,17 +26,17 @@ export default async function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Notifications</h1>
+      <h1 className="font-serif text-2xl font-bold text-ink">Notifications</h1>
 
       {empty && (
-        <div className="card text-sm text-zinc-400">
+        <div className="card text-sm text-muted">
           You&apos;re all caught up.
         </div>
       )}
 
       {requests.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
             Friend requests
           </h2>
           {requests.map((r) => (
@@ -53,7 +53,7 @@ export default async function NotificationsPage() {
                   </span>{" "}
                   wants to be friends
                 </p>
-                <p className="text-[11px] text-zinc-500">{timeAgo(r.at)}</p>
+                <p className="text-[11px] text-muted">{timeAgo(r.at)}</p>
               </div>
               <div className="flex gap-2">
                 <form action={acceptFriend}>
@@ -82,7 +82,7 @@ export default async function NotificationsPage() {
 
       {items.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
             Recent
           </h2>
           <ul className="space-y-2">
@@ -101,15 +101,15 @@ export default async function NotificationsPage() {
                         : "/"
                   }
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border p-3 transition",
+                    "flex items-center gap-3 rounded-xl border p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition",
                     n.unread
-                      ? "border-violet-800/60 bg-violet-950/20 hover:border-violet-700"
-                      : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700",
+                      ? "border-accent/50 bg-accent-soft hover:border-accent"
+                      : "border-line bg-surface hover:border-line-strong",
                   )}
                 >
                   <div className="relative shrink-0">
                     <Avatar url={n.actor.avatar} name={n.actor.name} size={36} />
-                    <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300">
+                    <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line bg-surface text-body">
                       {n.kind === "comment" ? (
                         <IconComment size={11} />
                       ) : (
@@ -135,11 +135,11 @@ export default async function NotificationsPage() {
                       )}
                     </p>
                     {n.text && (
-                      <p className="truncate text-xs text-zinc-500">
+                      <p className="truncate text-xs text-muted">
                         &ldquo;{n.text}&rdquo;
                       </p>
                     )}
-                    <p className="text-[11px] text-zinc-500">{timeAgo(n.at)}</p>
+                    <p className="text-[11px] text-muted">{timeAgo(n.at)}</p>
                   </div>
                   {n.kind === "compare" && n.score != null && (
                     <ScoreBadge score={n.score} className="shrink-0" />

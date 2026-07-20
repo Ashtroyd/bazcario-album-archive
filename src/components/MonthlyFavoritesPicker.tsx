@@ -168,8 +168,8 @@ function FilledSlot({
   onRemove: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-2.5 transition">
-      <span className="w-5 shrink-0 text-center text-sm font-semibold text-zinc-500">
+    <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition">
+      <span className="w-5 shrink-0 text-center text-sm font-semibold text-muted">
         {pick.position}
       </span>
       <CoverImage
@@ -178,8 +178,8 @@ function FilledSlot({
         className="h-12 w-12 shrink-0 rounded-lg"
       />
       <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">{pick.title}</div>
-        <div className="truncate text-sm text-zinc-400">{pick.artist}</div>
+        <div className="truncate font-medium text-ink">{pick.title}</div>
+        <div className="truncate text-sm text-muted">{pick.artist}</div>
       </div>
       <div className="flex shrink-0 flex-col">
         <button
@@ -187,7 +187,7 @@ function FilledSlot({
           disabled={pick.position === 1}
           onClick={onMoveUp}
           aria-label="Move up"
-          className="rounded p-0.5 text-zinc-500 transition hover:text-white disabled:opacity-20"
+          className="rounded p-0.5 text-muted transition hover:text-ink disabled:opacity-20"
         >
           <IconChevronUp size={16} />
         </button>
@@ -196,7 +196,7 @@ function FilledSlot({
           disabled={pick.position === 5}
           onClick={onMoveDown}
           aria-label="Move down"
-          className="rounded p-0.5 text-zinc-500 transition hover:text-white disabled:opacity-20"
+          className="rounded p-0.5 text-muted transition hover:text-ink disabled:opacity-20"
         >
           <IconChevronDown size={16} />
         </button>
@@ -205,7 +205,7 @@ function FilledSlot({
         type="button"
         onClick={onRemove}
         aria-label="Remove"
-        className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-red-950/40 hover:text-red-400"
+        className="shrink-0 rounded p-1.5 text-muted transition hover:bg-accent-soft hover:text-accent"
       >
         <IconTrash size={16} />
       </button>
@@ -259,12 +259,12 @@ function EmptySlot({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-zinc-700 p-2.5 text-left text-zinc-500 transition hover:border-zinc-600 hover:text-zinc-300"
+        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-line-strong p-2.5 text-left text-muted transition hover:border-accent hover:text-body"
       >
         <span className="w-5 shrink-0 text-center text-sm font-semibold">
           {position}
         </span>
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed border-zinc-700">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed border-line-strong">
           <IconPlus size={18} />
         </span>
         <span className="text-sm">Add a song</span>
@@ -273,9 +273,9 @@ function EmptySlot({
   }
 
   return (
-    <div className="relative rounded-xl border border-zinc-700 bg-zinc-900/60 p-2.5">
+    <div className="relative rounded-xl border border-line-strong bg-surface p-2.5">
       <div className="flex items-center gap-3">
-        <span className="w-5 shrink-0 text-center text-sm font-semibold text-zinc-500">
+        <span className="w-5 shrink-0 text-center text-sm font-semibold text-muted">
           {position}
         </span>
         <input
@@ -288,21 +288,21 @@ function EmptySlot({
           className="input"
         />
         {searching && (
-          <span className="shrink-0 animate-pulse text-xs text-zinc-500">
+          <span className="shrink-0 animate-pulse text-xs text-muted">
             …
           </span>
         )}
       </div>
 
       {results.length > 0 && (
-        <ul className="mt-2 max-h-72 overflow-auto rounded-lg border border-zinc-700 bg-zinc-900">
+        <ul className="mt-2 max-h-72 overflow-auto rounded-lg border border-line bg-surface">
           {results.map((s) => (
             <li key={s.id}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(s)}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-zinc-800"
+                className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-ivory"
               >
                 <CoverImage
                   url={s.coverUrl}
@@ -310,10 +310,10 @@ function EmptySlot({
                   className="h-10 w-10 shrink-0 rounded"
                 />
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">
+                  <span className="block truncate text-sm font-medium text-ink">
                     {s.title}
                   </span>
-                  <span className="block truncate text-xs text-zinc-400">
+                  <span className="block truncate text-xs text-muted">
                     {s.artist}
                     {s.album ? ` · ${s.album}` : ""}
                   </span>

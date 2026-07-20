@@ -116,17 +116,17 @@ export default async function FriendProfilePage({
 
   return (
     <div className="space-y-6">
-      <Link href="/friends" className="text-sm text-zinc-400 hover:underline">
+      <Link href="/friends" className="text-sm text-muted hover:underline">
         ← Friends
       </Link>
 
       <div className="flex items-center gap-4">
         <Avatar url={profile.avatar_url} name={profile.display_name} size={64} />
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="font-serif text-2xl font-bold text-ink">
             {profile.display_name ?? "Friend"}
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-muted">
             {rated.length} album{rated.length === 1 ? "" : "s"} · avg{" "}
             {formatScore(avg)}
           </p>
@@ -142,13 +142,13 @@ export default async function FriendProfilePage({
               >
                 {taste.matchPct}%
               </div>
-              <div className="text-[10px] tracking-wide text-zinc-500 uppercase">
+              <div className="text-[10px] tracking-wide text-muted uppercase">
                 Taste match · {taste.sharedTracks} shared track
                 {taste.sharedTracks === 1 ? "" : "s"}
               </div>
             </div>
           )}
-          <div className="space-y-0.5 text-sm text-zinc-400">
+          <div className="space-y-0.5 text-sm text-muted">
             <div>
               {sharedAlbums.length} shared album
               {sharedAlbums.length === 1 ? "" : "s"}
@@ -156,7 +156,7 @@ export default async function FriendProfilePage({
             {biggestSplit && biggestSplit.diff > 0 && (
               <div>
                 Biggest split:{" "}
-                <span className="text-zinc-200">{biggestSplit.title}</span> (
+                <span className="text-body">{biggestSplit.title}</span> (
                 {formatScore(biggestSplit.mine)} vs{" "}
                 {formatScore(biggestSplit.theirs)})
               </div>
@@ -167,7 +167,7 @@ export default async function FriendProfilePage({
 
       {areFriends && monthlyPicks.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
             {formatMonthLabel(currentMonth)} favourites
           </h2>
           <div className="card">
@@ -177,11 +177,11 @@ export default async function FriendProfilePage({
       )}
 
       {!areFriends ? (
-        <div className="card text-sm text-zinc-400">
+        <div className="card text-sm text-muted">
           You&apos;re not friends yet — their ratings are private.
         </div>
       ) : rated.length === 0 ? (
-        <div className="card text-sm text-zinc-400">No ratings yet.</div>
+        <div className="card text-sm text-muted">No ratings yet.</div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {rated.map((r) => (
@@ -194,7 +194,7 @@ export default async function FriendProfilePage({
               />
               <Link
                 href={`/album/${r.album!.id}/compare/${id}`}
-                className="block text-center text-xs text-violet-400 hover:underline"
+                className="block text-center text-xs text-accent hover:underline"
               >
                 compare →
               </Link>
