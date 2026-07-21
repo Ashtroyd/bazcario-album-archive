@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
-import { updateProfile } from "@/app/actions/profile";
 import { signout } from "@/app/actions/auth";
-import { Avatar } from "@/components/Avatar";
 import { FavoriteTrackPicker } from "@/components/FavoriteTrackPicker";
+import { ProfileSettingsCard } from "@/components/ProfileSettingsCard";
+import { MonthlyFavoritesMonthSection } from "@/components/MonthlyFavoritesMonthSection";
 import { cn, formatScore } from "@/lib/utils";
 
 export default async function ProfilePage() {
@@ -145,64 +145,11 @@ export default async function ProfilePage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
-        {/* Settings */}
-        <form action={updateProfile} className="card space-y-4">
-          <div className="flex items-center gap-4">
-            <Avatar
-              url={profile?.avatar_url}
-              name={profile?.display_name}
-              size={64}
-            />
-            <div className="min-w-0 flex-1">
-              <label className="label" htmlFor="avatar">
-                Avatar
-              </label>
-              <input
-                id="avatar"
-                name="avatar"
-                type="file"
-                accept="image/*"
-                className="block w-full max-w-full text-xs text-muted file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-ivory file:px-2.5 file:py-1.5 file:text-body"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="label" htmlFor="display_name">
-              Display name
-            </label>
-            <input
-              id="display_name"
-              name="display_name"
-              type="text"
-              defaultValue={profile?.display_name ?? ""}
-              className="input"
-            />
-          </div>
-
-          <div>
-            <label className="label">Email</label>
-            <input
-              type="email"
-              value={user?.email ?? ""}
-              disabled
-              className="input opacity-60"
-            />
-          </div>
-
-          <div>
-            <label className="label">Visibility</label>
-            <span className="chip">Friends-only (default)</span>
-            <p className="mt-1 text-xs text-muted">
-              A public/private toggle is coming. For now, your ratings are
-              visible only to you and your accepted friends.
-            </p>
-          </div>
-
-          <button type="submit" className="btn btn-primary">
-            Save changes
-          </button>
-        </form>
+        <ProfileSettingsCard
+          avatarUrl={profile?.avatar_url ?? null}
+          displayName={profile?.display_name ?? null}
+          email={user?.email ?? null}
+        />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 self-start">
@@ -216,6 +163,8 @@ export default async function ProfilePage() {
           ))}
         </div>
       </div>
+
+      <MonthlyFavoritesMonthSection userId={user!.id} />
 
       {ratedAlbums.length > 0 && (
         <>
