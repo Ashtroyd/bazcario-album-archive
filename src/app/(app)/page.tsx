@@ -126,10 +126,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="font-serif text-lg font-semibold text-ink">Activity</h2>
-        <ActivityFeed items={activity} />
-      </section>
+      <ActivityFeed items={activity} />
     </div>
   );
 }
