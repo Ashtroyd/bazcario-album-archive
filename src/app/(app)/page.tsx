@@ -87,7 +87,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="space-y-3">
+      <section className="space-y-3" data-tour="monthly-favourites">
         <div className="flex items-center justify-between">
           <h2 className="font-serif text-lg font-semibold text-ink">
             {formatMonthLabel(currentMonth)} favourites

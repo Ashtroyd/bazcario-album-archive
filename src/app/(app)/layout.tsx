@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
 import { BottomNav } from "@/components/BottomNav";
+import { FeatureTour } from "@/components/FeatureTour";
+import { TourStarter } from "@/components/TourStarter";
 import { createClient } from "@/lib/supabase/server";
 import { getUnreadCount } from "@/lib/notifications";
 import type { Profile } from "@/lib/types";
@@ -39,6 +41,8 @@ export default async function AppLayout({
         {children}
       </main>
       <BottomNav unreadCount={unreadCount} />
+      <TourStarter />
+      <FeatureTour />
     </div>
   );
 }

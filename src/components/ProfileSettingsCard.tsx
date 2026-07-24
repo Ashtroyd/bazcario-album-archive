@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { Avatar } from "@/components/Avatar";
+import { startTour } from "@/lib/tour-bus";
 
 /** The profile's avatar/name/email settings, collapsed to a view with an Edit button. */
 export function ProfileSettingsCard({
@@ -46,13 +47,22 @@ export function ProfileSettingsCard({
             visible only to you and your accepted friends.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="btn btn-outline text-sm"
-        >
-          Edit profile
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="btn btn-outline text-sm"
+          >
+            Edit profile
+          </button>
+          <button
+            type="button"
+            onClick={() => startTour()}
+            className="btn btn-ghost text-sm"
+          >
+            Take a tour
+          </button>
+        </div>
       </div>
     );
   }

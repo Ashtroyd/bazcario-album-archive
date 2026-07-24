@@ -13,13 +13,13 @@ import {
 } from "@/components/icons";
 
 const ITEMS = [
-  { href: "/", label: "Home", Icon: IconHome },
-  { href: "/albums", label: "Library", Icon: IconDisc },
-  { href: "/album/new", label: "Add", Icon: IconPlus },
-  { href: "/friends", label: "Friends", Icon: IconUsers },
-  { href: "/announcements", label: "News", Icon: IconMegaphone },
-  { href: "/notifications", label: "Alerts", Icon: IconBell },
-];
+  { href: "/", label: "Home", Icon: IconHome, tour: undefined },
+  { href: "/albums", label: "Library", Icon: IconDisc, tour: undefined },
+  { href: "/album/new", label: "Add", Icon: IconPlus, tour: "add-album" },
+  { href: "/friends", label: "Friends", Icon: IconUsers, tour: "friends-nav" },
+  { href: "/announcements", label: "News", Icon: IconMegaphone, tour: "announcements-nav" },
+  { href: "/notifications", label: "Alerts", Icon: IconBell, tour: "notifications-bell" },
+] as const;
 
 type Rect = { left: number; width: number };
 
@@ -129,7 +129,7 @@ export function BottomNav({ unreadCount }: { unreadCount: number }) {
           />
         )}
 
-        {ITEMS.map(({ href, label, Icon }) => (
+        {ITEMS.map(({ href, label, Icon, tour }) => (
           <a
             key={href}
             ref={(el) => {
@@ -137,6 +137,7 @@ export function BottomNav({ unreadCount }: { unreadCount: number }) {
             }}
             href={href}
             aria-label={label}
+            data-tour={tour}
             onPointerDown={(e) => handlePointerDown(e, href)}
             onClick={(e) => {
               e.preventDefault();

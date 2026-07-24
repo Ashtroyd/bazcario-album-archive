@@ -44,6 +44,13 @@ export function AppNav({
             <Link
               key={l.href}
               href={l.href}
+              data-tour={
+                l.href === "/friends"
+                  ? "friends-nav"
+                  : l.href === "/announcements"
+                    ? "announcements-nav"
+                    : undefined
+              }
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm transition-colors",
                 isActive(l.href)
@@ -59,6 +66,7 @@ export function AppNav({
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/album/new"
+            data-tour="add-album"
             className="hidden btn btn-primary px-3 py-1.5 sm:inline-flex"
           >
             <span className="text-base leading-none">+</span>
@@ -68,6 +76,7 @@ export function AppNav({
           <Link
             href="/notifications"
             title="Notifications"
+            data-tour="notifications-bell"
             className={cn(
               "relative hidden rounded-full px-2 py-1.5 transition-colors sm:inline-flex",
               isActive("/notifications")

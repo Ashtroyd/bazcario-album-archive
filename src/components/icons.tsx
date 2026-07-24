@@ -183,3 +183,12 @@ export function IconMegaphone({ className, size }: IconProps) {
     </svg>
   );
 }
+
+export function IconX({ className, size }: IconProps) {
+  return (
+    <svg {...svgProps(size)} className={className}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
