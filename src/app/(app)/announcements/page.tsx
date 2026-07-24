@@ -15,19 +15,19 @@ export default async function AnnouncementsPage() {
 
   const { data: follows } = await supabase
     .from("followed_artists")
-    .select("id, mbid, name")
+    .select("id, spotify_artist_id, name")
     .eq("user_id", user!.id)
     .order("name");
 
   const artists = follows ?? [];
-  const mbids = artists.map((a) => a.mbid);
+  const spotifyIds = artists.map((a) => a.spotify_artist_id);
 
   let releases: ArtistRelease[] = [];
-  if (mbids.length > 0) {
+  if (spotifyIds.length > 0) {
     const { data } = await supabase
       .from("artist_releases")
       .select("*")
-      .in("mbid", mbids)
+      .in("spotify_artist_id", spotifyIds)
       .order("release_date", { ascending: false, nullsFirst: false })
       .limit(50);
     releases = (data ?? []) as ArtistRelease[];
@@ -42,7 +42,7 @@ export default async function AnnouncementsPage() {
         </p>
       </div>
 
-      <ArtistFollowSearch followedMbids={mbids} />
+      <ArtistFollowSearch followedIds={spotifyIds} />
 
       <FollowedArtistsList artists={artists} />
 
@@ -77,7 +77,7 @@ export default async function AnnouncementsPage() {
                     </p>
                     <p className="text-[11px] text-muted">
                       {formatDate(r.release_date)}
-                      {r.release_type && ` · ${r.release_type}`}
+                      {r.album_type && ` · ${r.album_type}`}
                     </p>
                   </div>
                   {isNew && <span className="chip shrink-0 border-accent/40 text-accent">New</span>}

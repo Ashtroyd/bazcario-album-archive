@@ -1,6 +1,6 @@
 /**
- * Scheduled job: for every artist anyone follows, fetch their release
- * groups from MusicBrainz and cache any not already in artist_releases.
+ * Scheduled job: for every artist anyone follows, fetch their albums/singles
+ * from Spotify and cache any not already in artist_releases.
  * Run via GitHub Actions (.github/workflows/check-artist-releases.yml).
  *
  *   npm run check-artist-releases
@@ -9,61 +9,54 @@ import { config as loadEnv } from "dotenv";
 loadEnv({ path: ".env.local" });
 
 import { createAdminClient } from "../src/lib/supabase/admin";
-import { getArtistReleaseGroups, getReleaseGroupCoverUrl } from "../src/lib/musicbrainz";
+import { getArtistAlbums } from "../src/lib/spotify";
 
-const RELEASE_TYPES = new Set(["Album", "EP", "Single"]);
-const SKIP_SECONDARY_TYPES = new Set([
-  "Compilation",
-  "Live",
-  "Remix",
-  "Demo",
-  "DJ-mix",
-  "Mixtape/Street",
-]);
+// Spotify release dates can be year- or month-precision ("2024", "2024-05");
+// the release_date column needs a full date.
+function normalizeReleaseDate(raw: string): string {
+  if (/^\d{4}$/.test(raw)) return `${raw}-01-01`;
+  if (/^\d{4}-\d{2}$/.test(raw)) return `${raw}-01`;
+  return raw;
+}
 
 async function main() {
   const supabase = createAdminClient();
 
-  const { data: follows, error } = await supabase.from("followed_artists").select("mbid, name");
+  const { data: follows, error } = await supabase.from("followed_artists").select("spotify_artist_id, name");
   if (error) throw error;
 
   const artists = new Map<string, string>();
-  for (const f of follows ?? []) artists.set(f.mbid, f.name);
+  for (const f of follows ?? []) artists.set(f.spotify_artist_id, f.name);
 
-  for (const [mbid, name] of artists) {
-    let groups;
+  for (const [artistId, name] of artists) {
+    let albums;
     try {
-      groups = await getArtistReleaseGroups(mbid);
+      albums = await getArtistAlbums(artistId);
     } catch (err) {
-      console.error(`Failed to fetch release groups for ${name}:`, err);
+      console.error(`Failed to fetch albums for ${name}:`, err);
       continue;
     }
 
-    for (const g of groups) {
-      if (!g.primaryType || !RELEASE_TYPES.has(g.primaryType)) continue;
-      if (g.secondaryTypes.some((t) => SKIP_SECONDARY_TYPES.has(t))) continue;
-
+    for (const album of albums) {
       const { data: existing } = await supabase
         .from("artist_releases")
         .select("id")
-        .eq("release_group_id", g.id)
+        .eq("spotify_album_id", album.id)
         .maybeSingle();
       if (existing) continue;
 
-      const coverUrl = await getReleaseGroupCoverUrl(g.id);
-
       const { error: insertError } = await supabase.from("artist_releases").insert({
-        mbid,
+        spotify_artist_id: artistId,
         artist_name: name,
-        release_group_id: g.id,
-        title: g.title,
-        release_type: g.primaryType,
-        release_date: g.firstReleaseDate,
-        cover_url: coverUrl,
+        spotify_album_id: album.id,
+        title: album.name,
+        album_type: album.album_type,
+        release_date: normalizeReleaseDate(album.release_date),
+        cover_url: album.images[0]?.url ?? null,
       });
 
       if (insertError) {
-        console.error(`Failed to save release "${g.title}" for ${name}:`, insertError.message);
+        console.error(`Failed to save release "${album.name}" for ${name}:`, insertError.message);
       }
     }
   }

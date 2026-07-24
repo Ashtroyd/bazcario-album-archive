@@ -24,9 +24,11 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
   highlighted.
 - **Comments** — per album (schema supports per-track / per-rating too).
 - **Profile** — avatar upload, display name, and stats (avg rating, top genre).
-- **Announcements** — follow artists (searched via MusicBrainz, no API key) and
-  see their new releases in a dedicated feed. A GitHub Actions job checks for
-  new releases every 30 minutes. Following is per-user; the release cache is
+- **Announcements** — follow artists (Spotify search, photo + a MusicBrainz
+  type/country/years-active line for disambiguation — Spotify's own
+  follower/genre data isn't available on a Developer Mode app) and see their
+  new releases in a dedicated feed. A GitHub Actions job checks for new
+  releases every 30 minutes. Following is per-user; the release cache is
   shared, so once one person follows an artist everyone sees its history.
 
 ---
@@ -62,6 +64,7 @@ Fill in:
 | `NEXT_PUBLIC_SUPABASE_URL` | Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Settings → API → `anon` `public` key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → `service_role` key (server-only; used only by the import script) |
+| `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` | [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) → create an app → Settings (Client Credentials flow, no redirect URI needed). Used by Announcements. |
 
 `.env.local` is git-ignored — never commit it.
 
@@ -75,7 +78,7 @@ This creates all tables, enums, the auto-profile and auto-overall triggers, the
 friends helper functions, every RLS policy, and the `covers` / `avatars` storage
 buckets. The script is idempotent and safe to re-run.
 
-Later migrations (`0002` through `0006`, including the Announcements
+Later migrations (`0002` through `0007`, including the Announcements
 feature's `followed_artists` / `artist_releases` tables) live in the same
 folder — apply each one the same way, in order.
 
@@ -155,8 +158,9 @@ in the UI.
    for a clean deploy, either set Vercel's **Root Directory** to
    `bazcario-album-archive` or split it into its own repository).
 2. Import the project in Vercel and add the env vars
-   `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   (the service-role key is only needed to run the import locally).
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SPOTIFY_CLIENT_ID`, and `SPOTIFY_CLIENT_SECRET` (the service-role key is
+   only needed to run the import locally).
 3. In Supabase **Authentication → URL Configuration**, add your Vercel domain to
    the **Site URL** and **Redirect URLs** (and update the Google redirect URI if
    using Google).
@@ -164,11 +168,12 @@ in the UI.
 ### GitHub Actions (Announcements release check)
 
 Add these as repo secrets (Settings → Secrets and variables → Actions):
-`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SPOTIFY_CLIENT_ID`,
+`SPOTIFY_CLIENT_SECRET`.
 
 [`.github/workflows/check-artist-releases.yml`](.github/workflows/check-artist-releases.yml)
-runs every 30 minutes, fetches each followed artist's release history from
-MusicBrainz, and caches anything new in `artist_releases`.
+runs every 30 minutes, fetches each followed artist's albums/singles from
+Spotify, and caches anything new in `artist_releases`.
 
 ---
 
@@ -179,7 +184,7 @@ src/
   proxy.ts                     # session refresh + route protection (Next 16 "proxy")
   lib/
     supabase/{client,server,admin,middleware}.ts
-    auth.ts  types.ts  utils.ts  coverart.ts  musicbrainz.ts
+    auth.ts  types.ts  utils.ts  coverart.ts  spotify.ts  musicbrainz.ts
   app/
     (auth)/{login,signup}/     # public auth pages
     (app)/                     # protected shell (nav + auth guard)
@@ -190,7 +195,7 @@ src/
     auth/callback/route.ts     # OAuth / email-confirm callback
     actions/                   # server actions (albums, ratings, friends, comments, artists, ...)
   components/                  # UI (AlbumCard, TrackRatingTable, Comments, ...)
-supabase/migrations/            # 0001_init.sql, ..., 0006_artist_follows.sql
+supabase/migrations/            # 0001_init.sql, ..., 0007_artist_follows_spotify.sql
 scripts/import.ts              # one-time spreadsheet importer
 scripts/checkArtistReleases.ts # scheduled job (see GitHub Actions above)
 ```

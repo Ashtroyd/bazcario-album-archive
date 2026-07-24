@@ -1,15 +1,31 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { searchArtistsAction, followArtist } from "@/app/actions/artists";
-import type { ArtistResult } from "@/lib/musicbrainz";
+import {
+  searchArtistsAction,
+  followArtist,
+  type ArtistSearchResult,
+} from "@/app/actions/artists";
+import { Avatar } from "@/components/Avatar";
 
-export function ArtistFollowSearch({ followedMbids }: { followedMbids: string[] }) {
+const regionNames = typeof Intl.DisplayNames !== "undefined" ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
+
+function formatMeta(meta: ArtistSearchResult["meta"]): string | null {
+  if (!meta) return null;
+  const parts: string[] = [];
+  if (meta.type) parts.push(meta.type);
+  const country = meta.country ? (regionNames?.of(meta.country) ?? meta.country) : null;
+  if (country) parts.push(country);
+  if (meta.beginYear) parts.push(meta.endYear ? `${meta.beginYear}–${meta.endYear}` : `${meta.beginYear}–present`);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+export function ArtistFollowSearch({ followedIds }: { followedIds: string[] }) {
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<ArtistResult[]>([]);
+  const [results, setResults] = useState<ArtistSearchResult[]>([]);
   const [searched, setSearched] = useState(false);
   const [pending, startSearch] = useTransition();
-  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set(followedMbids));
+  const [followed, setFollowed] = useState<Set<string>>(new Set(followedIds));
   const [, startFollow] = useTransition();
 
   function doSearch(e: React.FormEvent) {
@@ -21,11 +37,11 @@ export function ArtistFollowSearch({ followedMbids }: { followedMbids: string[] 
     });
   }
 
-  function follow(a: ArtistResult) {
-    setFollowedIds((prev) => new Set(prev).add(a.mbid));
+  function follow(a: ArtistSearchResult) {
+    setFollowed((prev) => new Set(prev).add(a.id));
     startFollow(async () => {
       const fd = new FormData();
-      fd.set("mbid", a.mbid);
+      fd.set("spotify_artist_id", a.id);
       fd.set("name", a.name);
       await followArtist(fd);
     });
@@ -57,20 +73,20 @@ export function ArtistFollowSearch({ followedMbids }: { followedMbids: string[] 
       {results.length > 0 && (
         <ul className="space-y-2">
           {results.map((a) => {
-            const isFollowed = followedIds.has(a.mbid);
+            const isFollowed = followed.has(a.id);
+            const meta = formatMeta(a.meta);
             return (
-              <li key={a.mbid} className="flex items-center gap-2">
-                <span className="text-sm text-body">
-                  {a.name}
-                  {a.disambiguation && (
-                    <span className="ml-1 text-xs text-muted">({a.disambiguation})</span>
-                  )}
-                </span>
+              <li key={a.id} className="flex items-center gap-3">
+                <Avatar url={a.imageUrl} name={a.name} size={44} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-ink">{a.name}</p>
+                  {meta && <p className="truncate text-xs text-muted">{meta}</p>}
+                </div>
                 <button
                   type="button"
                   disabled={isFollowed}
                   onClick={() => follow(a)}
-                  className="btn btn-primary ml-auto px-3 py-1 text-xs disabled:opacity-60"
+                  className="btn btn-primary shrink-0 px-3 py-1 text-xs disabled:opacity-60"
                 >
                   {isFollowed ? "Following" : "Follow"}
                 </button>

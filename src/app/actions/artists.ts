@@ -2,11 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { searchArtists, type ArtistResult } from "@/lib/musicbrainz";
+import { searchArtists, type SpotifyArtistResult } from "@/lib/spotify";
+import { lookupArtistMeta, type ArtistMeta } from "@/lib/musicbrainz";
 
-export async function searchArtistsAction(query: string): Promise<ArtistResult[]> {
+export type ArtistSearchResult = SpotifyArtistResult & { meta: ArtistMeta | null };
+
+export async function searchArtistsAction(query: string): Promise<ArtistSearchResult[]> {
   if (query.trim().length < 2) return [];
-  return searchArtists(query);
+
+  const artists = await searchArtists(query, 5);
+  const metas = await Promise.all(artists.map((a) => lookupArtistMeta(a.name)));
+  return artists.map((a, i) => ({ ...a, meta: metas[i] }));
 }
 
 export async function followArtist(formData: FormData) {
@@ -16,13 +22,14 @@ export async function followArtist(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  const mbid = String(formData.get("mbid") || "");
+  const spotifyArtistId = String(formData.get("spotify_artist_id") || "");
   const name = String(formData.get("name") || "");
-  if (!mbid || !name) return;
+  if (!spotifyArtistId || !name) return;
 
-  await supabase
-    .from("followed_artists")
-    .upsert({ user_id: user.id, mbid, name }, { onConflict: "user_id,mbid", ignoreDuplicates: true });
+  await supabase.from("followed_artists").upsert(
+    { user_id: user.id, spotify_artist_id: spotifyArtistId, name },
+    { onConflict: "user_id,spotify_artist_id", ignoreDuplicates: true },
+  );
 
   revalidatePath("/announcements");
 }
