@@ -1,5 +1,8 @@
 # 🎧 Bazcario's Album Archive
 
+**Live at [bazcario-album-archive.vercel.app](https://bazcario-album-archive.vercel.app)**
+— pushes to `main` deploy automatically.
+
 A full-stack web app that replaces a personal album-rating spreadsheet. Rate
 albums **track-by-track**, sync across devices via accounts, friend other users,
 and compare ratings side-by-side. Ratings are **friends-only by default**,
@@ -107,6 +110,10 @@ Open <http://localhost:3000>, sign up, and start rating.
 
 ## Importing the spreadsheet
 
+> Optional — only relevant if you're migrating your own existing
+> album-rating spreadsheet. Skip this section otherwise; sign up in the app
+> and start rating directly.
+
 A one-time importer loads `Bazcario's Album Archive.xlsx` into Supabase.
 
 - **Listener 1** (spreadsheet columns A/B) → your account (`IMPORT_OWNER_EMAIL`).
@@ -154,11 +161,8 @@ in the UI.
 
 ## Deploy to Vercel
 
-1. Push this folder to a Git repo (it currently lives inside the `sandbox` repo —
-   for a clean deploy, either set Vercel's **Root Directory** to
-   `bazcario-album-archive` or split it into its own repository).
-2. Import the project in Vercel and add the env vars
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+1. Fork or clone this repo, then [import it in Vercel](https://vercel.com/new).
+2. Add the env vars `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SPOTIFY_CLIENT_ID`, and `SPOTIFY_CLIENT_SECRET` (the service-role key is
    only needed to run the import locally).
 3. In Supabase **Authentication → URL Configuration**, add your Vercel domain to
