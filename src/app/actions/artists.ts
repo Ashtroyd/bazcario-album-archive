@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { searchArtists, type ArtistResult } from "@/lib/musicbrainz";
 
-export type { ArtistResult };
-
 export async function searchArtistsAction(query: string): Promise<ArtistResult[]> {
   if (query.trim().length < 2) return [];
   return searchArtists(query);

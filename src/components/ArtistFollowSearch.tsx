@@ -1,11 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import {
-  searchArtistsAction,
-  followArtist,
-  type ArtistResult,
-} from "@/app/actions/artists";
+import { searchArtistsAction, followArtist } from "@/app/actions/artists";
+import type { ArtistResult } from "@/lib/musicbrainz";
 
 export function ArtistFollowSearch({ followedMbids }: { followedMbids: string[] }) {
   const [q, setQ] = useState("");
