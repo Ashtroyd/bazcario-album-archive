@@ -81,6 +81,26 @@ export interface Comment {
   created_at: string;
 }
 
+export interface FollowedArtist {
+  id: string;
+  user_id: string;
+  mbid: string;
+  name: string;
+  created_at: string;
+}
+
+export interface ArtistRelease {
+  id: string;
+  mbid: string;
+  artist_name: string;
+  release_group_id: string;
+  title: string;
+  release_type: string | null;
+  release_date: string | null;
+  cover_url: string | null;
+  first_seen_at: string;
+}
+
 // ---- Composite / view types used by the UI ----
 
 export interface AlbumWithMyRating extends Album {

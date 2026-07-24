@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/albums", label: "Library" },
   { href: "/friends", label: "Friends" },
+  { href: "/announcements", label: "Announcements" },
 ];
 
 export function AppNav({

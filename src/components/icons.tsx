@@ -174,3 +174,12 @@ export function IconHeadphones({ className, size }: IconProps) {
     </svg>
   );
 }
+
+export function IconMegaphone({ className, size }: IconProps) {
+  return (
+    <svg {...svgProps(size)} className={className}>
+      <path d="M3 11v2a2 2 0 0 0 2 2h1l1 5h2l-1-5h2l9 4V7l-9 4H6a2 2 0 0 0-2 2Z" />
+      <path d="M17 9.5a3.5 3.5 0 0 1 0 5" />
+    </svg>
+  );
+}

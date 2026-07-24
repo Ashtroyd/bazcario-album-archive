@@ -24,6 +24,10 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
   highlighted.
 - **Comments** — per album (schema supports per-track / per-rating too).
 - **Profile** — avatar upload, display name, and stats (avg rating, top genre).
+- **Announcements** — follow artists (searched via MusicBrainz, no API key) and
+  see their new releases in a dedicated feed. A GitHub Actions job checks for
+  new releases every 30 minutes. Following is per-user; the release cache is
+  shared, so once one person follows an artist everyone sees its history.
 
 ---
 
@@ -70,6 +74,10 @@ Open **SQL Editor** in the Supabase dashboard, paste the contents of
 This creates all tables, enums, the auto-profile and auto-overall triggers, the
 friends helper functions, every RLS policy, and the `covers` / `avatars` storage
 buckets. The script is idempotent and safe to re-run.
+
+Later migrations (`0002` through `0006`, including the Announcements
+feature's `followed_artists` / `artist_releases` tables) live in the same
+folder — apply each one the same way, in order.
 
 ### 4. (Optional) Enable Google sign-in
 
@@ -153,6 +161,15 @@ in the UI.
    the **Site URL** and **Redirect URLs** (and update the Google redirect URI if
    using Google).
 
+### GitHub Actions (Announcements release check)
+
+Add these as repo secrets (Settings → Secrets and variables → Actions):
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+
+[`.github/workflows/check-artist-releases.yml`](.github/workflows/check-artist-releases.yml)
+runs every 30 minutes, fetches each followed artist's release history from
+MusicBrainz, and caches anything new in `artist_releases`.
+
 ---
 
 ## Project structure
@@ -162,19 +179,20 @@ src/
   proxy.ts                     # session refresh + route protection (Next 16 "proxy")
   lib/
     supabase/{client,server,admin,middleware}.ts
-    auth.ts  types.ts  utils.ts  coverart.ts
+    auth.ts  types.ts  utils.ts  coverart.ts  musicbrainz.ts
   app/
     (auth)/{login,signup}/     # public auth pages
     (app)/                     # protected shell (nav + auth guard)
       page.tsx                 # dashboard
       albums/  album/[id]/  album/new/
       album/[id]/compare/[friendId]/
-      friends/  friends/[id]/  profile/
+      friends/  friends/[id]/  profile/  announcements/
     auth/callback/route.ts     # OAuth / email-confirm callback
-    actions/                   # server actions (albums, ratings, friends, comments, ...)
+    actions/                   # server actions (albums, ratings, friends, comments, artists, ...)
   components/                  # UI (AlbumCard, TrackRatingTable, Comments, ...)
-supabase/migrations/0001_init.sql
+supabase/migrations/            # 0001_init.sql, ..., 0006_artist_follows.sql
 scripts/import.ts              # one-time spreadsheet importer
+scripts/checkArtistReleases.ts # scheduled job (see GitHub Actions above)
 ```
 
 ## Useful commands
@@ -185,4 +203,5 @@ npm run build        # production build
 npm run lint         # ESLint
 npm run import:dry   # preview the spreadsheet import
 npm run import       # run the live import
+npm run check-artist-releases  # manually run the Announcements release check
 ```

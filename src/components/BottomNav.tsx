@@ -8,6 +8,7 @@ import {
   IconDisc,
   IconPlus,
   IconUsers,
+  IconMegaphone,
   IconBell,
 } from "@/components/icons";
 
@@ -16,6 +17,7 @@ const ITEMS = [
   { href: "/albums", label: "Library", Icon: IconDisc },
   { href: "/album/new", label: "Add", Icon: IconPlus },
   { href: "/friends", label: "Friends", Icon: IconUsers },
+  { href: "/announcements", label: "News", Icon: IconMegaphone },
   { href: "/notifications", label: "Alerts", Icon: IconBell },
 ];
 

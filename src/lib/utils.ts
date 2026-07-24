@@ -37,6 +37,14 @@ export function formatDate(d: string | null | undefined): string {
   });
 }
 
+/** Whether a date string falls within the last N days. */
+export function isWithinDays(iso: string | null | undefined, days: number): boolean {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return false;
+  return t >= Date.now() - days * 24 * 60 * 60 * 1000;
+}
+
 /** Compact relative time: "just now", "3h ago", "2d ago", else a date. */
 export function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "";
