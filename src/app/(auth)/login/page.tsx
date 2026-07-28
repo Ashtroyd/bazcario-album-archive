@@ -4,7 +4,12 @@ import { login } from "@/app/actions/auth";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string; redirect?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    message?: string;
+    redirect?: string;
+    email?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const next = sp.redirect ?? "/";
@@ -36,6 +41,7 @@ export default async function LoginPage({
             type="email"
             autoComplete="email"
             required
+            defaultValue={sp.email ?? ""}
             className="input"
             placeholder="you@example.com"
           />

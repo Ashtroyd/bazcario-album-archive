@@ -98,36 +98,8 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
         className="mt-3 w-full accent-accent"
       />
 
-      {/* Replay buttons + exact value */}
+      {/* Exact value */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span
-          className="text-[10px] tracking-wide text-muted uppercase"
-          title="Replay value — how often you'd come back to this track"
-        >
-          Replay
-        </span>
-        <div className="inline-flex overflow-hidden rounded-lg border border-line">
-          {REPLAY_VALUES.map((rv) => (
-            <button
-              key={rv}
-              type="button"
-              onClick={() => {
-                const next = replay === rv ? "" : rv;
-                setReplay(next);
-                persist({ replay: next });
-              }}
-              className={cn(
-                "px-2.5 py-1 text-xs transition",
-                replay === rv
-                  ? "bg-accent text-white"
-                  : "text-body hover:bg-ivory",
-              )}
-            >
-              {SHORT[rv]}
-            </button>
-          ))}
-        </div>
-
         <input
           type="number"
           min={0}
@@ -162,6 +134,37 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
         >
           ✓ saved
         </span>
+      </div>
+
+      {/* Replay value — separate axis from the score above, not a quick-rate shortcut */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-2">
+        <span
+          className="text-[10px] tracking-wide text-muted uppercase"
+          title="Replay value — how often you'd come back to this track"
+        >
+          Would replay?
+        </span>
+        <div className="inline-flex overflow-hidden rounded-lg border border-line">
+          {REPLAY_VALUES.map((rv) => (
+            <button
+              key={rv}
+              type="button"
+              onClick={() => {
+                const next = replay === rv ? "" : rv;
+                setReplay(next);
+                persist({ replay: next });
+              }}
+              className={cn(
+                "px-2.5 py-1 text-xs transition",
+                replay === rv
+                  ? "bg-accent text-white"
+                  : "text-body hover:bg-ivory",
+              )}
+            >
+              {SHORT[rv]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Notes */}

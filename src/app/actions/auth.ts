@@ -43,11 +43,11 @@ export async function signup(formData: FormData) {
     revalidatePath("/", "layout");
     redirect("/");
   }
-  redirect(
-    `/login?message=${encodeURIComponent(
-      "Account created. Check your email to confirm, then sign in.",
-    )}`,
-  );
+  const params = new URLSearchParams({
+    message: "Account created. Check your email to confirm, then sign in.",
+    email,
+  });
+  redirect(`/login?${params.toString()}`);
 }
 
 export async function signout() {
