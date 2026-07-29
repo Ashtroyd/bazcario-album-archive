@@ -226,8 +226,8 @@ export default async function ComparePage({
         {!theyHaveData ? (
           <div className="card space-y-3 text-sm text-muted">
             <p>
-              Nothing to compare yet — {friendName} hasn&apos;t rated this
-              album (or you&apos;re not friends).
+              Nothing to compare yet — {friendName}{" "}
+              hasn&apos;t rated this album (or you&apos;re not friends).
             </p>
             <div className="flex flex-wrap gap-2">
               <Link href={`/album/${id}`} className="btn btn-outline text-sm">
@@ -388,7 +388,7 @@ function DetailColumn({
             </div>
           )}
           {rating?.notes && (
-            <p className="whitespace-pre-wrap text-muted">{rating.notes}</p>
+            <p className="break-words whitespace-pre-wrap text-muted">{rating.notes}</p>
           )}
         </>
       )}
@@ -407,7 +407,7 @@ function TrackSide({ side, label }: { side: Side; label: string }) {
         <ReplayBadge value={side?.replay ?? null} />
       </div>
       {side?.notes ? (
-        <p className="mt-1 text-xs whitespace-pre-wrap text-muted">
+        <p className="mt-1 text-xs break-words whitespace-pre-wrap text-muted">
           {side.notes}
         </p>
       ) : side?.rating == null ? (

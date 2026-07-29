@@ -105,7 +105,7 @@ export function CommentsThread({
                 name={c.author?.display_name}
                 size={32}
               />
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-ink">
                     {c.author?.display_name ?? "User"}
@@ -123,7 +123,7 @@ export function CommentsThread({
                     </button>
                   )}
                 </div>
-                <p className="text-sm whitespace-pre-wrap text-body">
+                <p className="text-sm break-words whitespace-pre-wrap text-body">
                   {c.body}
                 </p>
               </div>

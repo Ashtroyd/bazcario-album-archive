@@ -22,7 +22,7 @@ export default async function FavouritesPage() {
   const pastMonths = months.filter((m) => m !== currentMonth);
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className="max-w-lg space-y-8">
       <div>
         <h1 className="font-serif text-2xl font-bold text-ink">Favourite songs</h1>
         <p className="text-muted">

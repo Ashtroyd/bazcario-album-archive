@@ -23,7 +23,7 @@ export default async function FavouritesMonthPage({
   const picks = await getMonthlyFavorites(supabase, user.id, month);
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
+    <div className="max-w-lg space-y-6">
       <Link href="/favourites" className="text-sm text-muted hover:underline">
         ← Favourite songs
       </Link>

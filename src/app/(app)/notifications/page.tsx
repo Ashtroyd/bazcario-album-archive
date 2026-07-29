@@ -25,7 +25,7 @@ export default async function NotificationsPage() {
   const empty = requests.length === 0 && items.length === 0;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <h1 className="font-serif text-2xl font-bold text-ink">Notifications</h1>
 
       {empty && (

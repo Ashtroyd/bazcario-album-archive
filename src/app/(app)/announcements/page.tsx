@@ -34,7 +34,7 @@ export default async function AnnouncementsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="font-serif text-2xl font-bold text-ink">Announcements</h1>
         <p className="text-sm text-muted">

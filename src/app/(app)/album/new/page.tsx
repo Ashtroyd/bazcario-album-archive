@@ -8,7 +8,7 @@ export default async function NewAlbumPage({
   const sp = await searchParams;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="max-w-3xl space-y-5">
       <div>
         <h1 className="font-serif text-2xl font-bold text-ink">Add an album</h1>
         <p className="text-sm text-muted">
