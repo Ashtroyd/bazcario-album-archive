@@ -6,7 +6,13 @@ import { AlbumCard } from "@/components/AlbumCard";
 import { MonthlyFavoritesCard } from "@/components/MonthlyFavoritesCard";
 import { cn, formatScore } from "@/lib/utils";
 import { computeTasteMatch, matchColor } from "@/lib/tasteMatch";
-import { formatMonthLabel, getMonthlyFavorites, monthKey } from "@/lib/monthlyFavorites";
+import {
+  formatMonthLabel,
+  getMonthlyFavorites,
+  listMonthsWithPicks,
+  monthKey,
+  monthParam,
+} from "@/lib/monthlyFavorites";
 import type { Album, Profile } from "@/lib/types";
 
 export default async function FriendProfilePage({
@@ -110,9 +116,13 @@ export default async function FriendProfilePage({
   }
 
   const currentMonth = monthKey();
-  const monthlyPicks = areFriends
-    ? await getMonthlyFavorites(supabase, id, currentMonth)
-    : [];
+  const [monthlyPicks, favouriteMonths] = areFriends
+    ? await Promise.all([
+        getMonthlyFavorites(supabase, id, currentMonth),
+        listMonthsWithPicks(supabase, id),
+      ])
+    : [[], []];
+  const pastMonths = favouriteMonths.filter((m) => m !== currentMonth);
 
   return (
     <div className="space-y-6">
@@ -173,6 +183,26 @@ export default async function FriendProfilePage({
           <div className="card">
             <MonthlyFavoritesCard picks={monthlyPicks} />
           </div>
+        </section>
+      )}
+
+      {areFriends && pastMonths.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
+            Past favourites
+          </h2>
+          <ul className="space-y-1.5">
+            {pastMonths.map((m) => (
+              <li key={m}>
+                <Link
+                  href={`/friends/${id}/favourites/${monthParam(m)}`}
+                  className="block rounded-lg border border-line bg-surface px-3 py-2 text-sm text-body transition hover:border-line-strong"
+                >
+                  {formatMonthLabel(m)}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

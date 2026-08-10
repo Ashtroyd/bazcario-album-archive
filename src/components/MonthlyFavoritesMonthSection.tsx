@@ -19,6 +19,9 @@ export function MonthlyFavoritesMonthSection({ userId }: { userId: string }) {
 
   useEffect(() => {
     let alive = true;
+    // Clear stale picks immediately when the month changes, before the new
+    // fetch resolves, so we don't briefly show the previous month's picks.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPicks(null);
     const supabase = createClient();
     getMonthlyFavorites(supabase, userId, `${param}-01`).then(

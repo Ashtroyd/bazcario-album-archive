@@ -69,7 +69,10 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
   const [clearedBefore, setClearedBefore] = useState(0);
 
   useEffect(() => {
+    // localStorage isn't available during SSR, so the cleared-before cutoff
+    // must be read post-mount rather than in a lazy initializer.
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClearedBefore(Number(localStorage.getItem(CLEARED_KEY) ?? 0));
     } catch {
       // ignore
