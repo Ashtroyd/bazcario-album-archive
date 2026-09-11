@@ -52,7 +52,7 @@ export async function sendFriendRequest(formData: FormData) {
 
   await supabase
     .from("friendships")
-    .insert({ user_id: user.id, friend_id: friendId, status: "pending" });
+    .insert({ user_id: user.id, friend_id: friendId });
   revalidatePath("/friends");
 }
 
