@@ -2,6 +2,8 @@
  * Live album metadata via the iTunes / Apple Music Search API (no key required).
  * Called server-side only (route handlers) to avoid browser CORS restrictions.
  */
+import { normalizeTrustedCoverUrl } from "./coverUrl";
+
 const ITUNES = "https://itunes.apple.com";
 
 export type AlbumSuggestion = {
@@ -26,7 +28,9 @@ export type SongSuggestion = {
 /** Upgrade iTunes artwork (e.g. .../100x100bb.jpg → .../600x600bb.jpg). */
 function hiRes(art: string | undefined | null): string | null {
   if (!art) return null;
-  return art.replace(/\/\d+x\d+bb\./, "/600x600bb.");
+  return normalizeTrustedCoverUrl(
+    art.replace(/\/\d+x\d+bb\./, "/600x600bb."),
+  );
 }
 
 function yearOf(releaseDate: string | undefined | null): number | null {

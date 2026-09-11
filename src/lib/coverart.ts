@@ -3,6 +3,8 @@
  * MusicBrainz asks for a descriptive User-Agent and ~1 request/second; this is
  * only called on-demand when creating an album, so we stay well under that.
  */
+import { normalizeTrustedCoverUrl } from "./coverUrl";
+
 const USER_AGENT =
   "BazcariosAlbumArchive/1.0 (https://github.com/Ashtroyd/sandbox)";
 
@@ -34,10 +36,12 @@ export async function fetchCoverArt(
       const caa = `https://coverartarchive.org/release-group/${g.id}/front-500`;
       const head = await fetch(caa, {
         method: "HEAD",
-        redirect: "follow",
+        redirect: "manual",
         next: { revalidate: 86400 },
       });
-      if (head.ok) return head.url || caa;
+      if (head.ok || [301, 302, 303, 307, 308].includes(head.status)) {
+        return normalizeTrustedCoverUrl(caa);
+      }
     }
     return null;
   } catch {

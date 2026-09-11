@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchCoverArt } from "@/lib/coverart";
 import { extractColors } from "@/lib/palette";
+import { normalizeTrustedCoverUrl } from "@/lib/coverUrl";
 
 /** Look up cover art (used by the add-album form's "Fetch cover" button). */
 export async function lookupCover(
@@ -34,8 +35,7 @@ export async function createAlbum(formData: FormData) {
   const genre = String(formData.get("genre") || "").trim() || null;
 
   // Cover precedence: uploaded file → fetched URL (hidden field) → auto-fetch.
-  let cover_image_url: string | null =
-    String(formData.get("cover_url") || "").trim() || null;
+  let cover_image_url = normalizeTrustedCoverUrl(formData.get("cover_url"));
 
   const file = formData.get("cover_file");
   if (file instanceof File && file.size > 0) {
@@ -45,8 +45,9 @@ export async function createAlbum(formData: FormData) {
       .from("covers")
       .upload(path, file, { upsert: true, contentType: file.type || undefined });
     if (!error) {
-      cover_image_url = supabase.storage.from("covers").getPublicUrl(path)
-        .data.publicUrl;
+      cover_image_url = normalizeTrustedCoverUrl(
+        supabase.storage.from("covers").getPublicUrl(path).data.publicUrl,
+      );
     }
   }
   if (!cover_image_url) {
@@ -111,11 +112,12 @@ export async function updateAlbumCover(formData: FormData) {
       .from("covers")
       .upload(path, file, { upsert: true, contentType: file.type || undefined });
     if (!error) {
-      cover_image_url = supabase.storage.from("covers").getPublicUrl(path)
-        .data.publicUrl;
+      cover_image_url = normalizeTrustedCoverUrl(
+        supabase.storage.from("covers").getPublicUrl(path).data.publicUrl,
+      );
     }
   } else {
-    cover_image_url = String(formData.get("cover_url") || "").trim() || null;
+    cover_image_url = normalizeTrustedCoverUrl(formData.get("cover_url"));
   }
 
   if (cover_image_url) {

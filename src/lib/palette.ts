@@ -1,5 +1,6 @@
 import { Vibrant } from "node-vibrant/node";
 import type { CoverColors } from "./types";
+import { downloadTrustedCover } from "./coverUrl";
 
 /** Relative luminance (0–1) of a #rrggbb color. */
 function luminance(hex: string): number {
@@ -62,9 +63,8 @@ export async function extractColors(
   imageUrl: string,
 ): Promise<CoverColors | null> {
   try {
-    const res = await fetch(imageUrl);
-    if (!res.ok) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
+    const buf = await downloadTrustedCover(imageUrl);
+    if (!buf) return null;
     const p = await new Vibrant(buf).getPalette();
 
     const bgSwatch = p.DarkVibrant ?? p.DarkMuted ?? p.Vibrant ?? p.Muted;

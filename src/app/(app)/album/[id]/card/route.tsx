@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeTrustedCoverUrl } from "@/lib/coverUrl";
 
 /** A shareable rating card (PNG) for the signed-in user's rating of an album. */
 export async function GET(
@@ -47,6 +48,7 @@ export async function GET(
   const accent = colors?.accent ?? "#a78bfa";
   const scoreText =
     overall != null ? String(Math.round(overall * 100) / 100) : "—";
+  const coverUrl = normalizeTrustedCoverUrl(album.cover_image_url);
 
   return new ImageResponse(
     (
@@ -62,9 +64,9 @@ export async function GET(
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "56px", width: "100%" }}>
-          {album.cover_image_url ? (
+          {coverUrl ? (
             <img
-              src={album.cover_image_url}
+              src={coverUrl}
               alt=""
               width={380}
               height={380}
