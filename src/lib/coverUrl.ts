@@ -27,6 +27,9 @@ function isProviderCoverUrl(url: URL): boolean {
   if (isDomainOrSubdomain(hostname, "mzstatic.com")) {
     return url.pathname.startsWith("/image/");
   }
+  if (hostname === "i.scdn.co") {
+    return url.pathname.startsWith("/image/");
+  }
   if (hostname === "coverartarchive.org") {
     return /^\/release-group\/[0-9a-f-]{36}\/front(?:-\d+)?$/i.test(
       url.pathname,

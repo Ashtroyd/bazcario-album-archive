@@ -19,6 +19,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "spicetify-extension/dist/**",
     "next-env.d.ts",
   ]),
 ]);

@@ -27,6 +27,8 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
   highlighted.
 - **Comments** — per album (schema supports per-track / per-rating too).
 - **Profile** — avatar upload, display name, and stats (avg rating, top genre).
+- **Spotify extension** — rate the currently playing track, set replay value,
+  and write notes directly inside Spotify through Spicetify.
 - **Announcements** — follow artists (Spotify search, photo + a MusicBrainz
   type/country/years-active line for disambiguation — Spotify's own
   follower/genre data isn't available on a Developer Mode app) and see their
@@ -163,8 +165,9 @@ in the UI.
 
 1. Fork or clone this repo, then [import it in Vercel](https://vercel.com/new).
 2. Add the env vars `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `SPOTIFY_CLIENT_ID`, and `SPOTIFY_CLIENT_SECRET` (the service-role key is
-   only needed to run the import locally).
+   `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and
+   `SUPABASE_SERVICE_ROLE_KEY`. The service-role key is server-only and is used
+   to authenticate restricted Spicetify connection tokens.
 3. In Supabase **Authentication → URL Configuration**, add your Vercel domain to
    the **Site URL** and **Redirect URLs** (and update the Google redirect URI if
    using Google).
@@ -214,3 +217,8 @@ npm run import:dry   # preview the spreadsheet import
 npm run import       # run the live import
 npm run check-artist-releases  # manually run the Announcements release check
 ```
+
+## Spicetify beta
+
+Installation and connection instructions are in the
+[Spicetify extension README](spicetify-extension/README.md).

@@ -8,6 +8,9 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/manifest.webmanifest",
+  // Spicetify authenticates with a restricted bearer token in each handler,
+  // not the browser's Supabase cookie.
+  "/api/extension",
 ];
 
 function isPublic(pathname: string) {

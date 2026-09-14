@@ -64,6 +64,16 @@ export interface TrackRating {
   notes: string | null;
 }
 
+export interface ExtensionAccessToken {
+  id: string;
+  user_id: string;
+  label: string;
+  created_at: string;
+  expires_at: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+}
+
 export interface Friendship {
   id: string;
   user_id: string;

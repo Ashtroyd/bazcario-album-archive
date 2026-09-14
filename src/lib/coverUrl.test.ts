@@ -21,6 +21,10 @@ test("accepts the application's cover providers", () => {
     "https://archive.org/download/example/cover.jpg",
   );
   assert.equal(
+    normalizeTrustedCoverUrl("https://i.scdn.co/image/ab67616d00001e02example"),
+    "https://i.scdn.co/image/ab67616d00001e02example",
+  );
+  assert.equal(
     normalizeTrustedCoverUrl(
       "https://dn123.ca.archive.org/0/items/example/cover.jpg",
     ),

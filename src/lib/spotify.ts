@@ -103,6 +103,88 @@ export type SpotifyAlbumResult = {
   images: { url: string }[];
 };
 
+export type SpotifyAlbumTrack = {
+  id: string;
+  name: string;
+  uri: string;
+  discNumber: number;
+  trackNumber: number;
+};
+
+export type SpotifyAlbumDetails = {
+  id: string;
+  name: string;
+  uri: string;
+  spotifyUrl: string;
+  albumType: string;
+  releaseDate: string;
+  artists: string[];
+  imageUrl: string | null;
+  tracks: SpotifyAlbumTrack[];
+};
+
+type RawAlbumTrack = {
+  id: string;
+  name: string;
+  uri: string;
+  disc_number: number;
+  track_number: number;
+};
+
+type RawAlbum = {
+  id: string;
+  name: string;
+  uri: string;
+  album_type: string;
+  release_date: string;
+  external_urls: { spotify?: string };
+  artists: { name: string }[];
+  images: { url: string }[];
+  tracks: {
+    items: RawAlbumTrack[];
+    next: string | null;
+    offset: number;
+    limit: number;
+    total: number;
+  };
+};
+
+/** Full album metadata used when a listener adds an album from Spicetify. */
+export async function getSpotifyAlbum(albumId: string): Promise<SpotifyAlbumDetails> {
+  const album = await spotifyFetch<RawAlbum>(`/albums/${encodeURIComponent(albumId)}?market=GB`);
+  const tracks = [...album.tracks.items];
+
+  while (tracks.length < album.tracks.total) {
+    const page = await spotifyFetch<{
+      items: RawAlbumTrack[];
+      next: string | null;
+    }>(
+      `/albums/${encodeURIComponent(albumId)}/tracks?market=GB&limit=50&offset=${tracks.length}`,
+    );
+    tracks.push(...page.items);
+    if (!page.next || page.items.length === 0) break;
+  }
+
+  return {
+    id: album.id,
+    name: album.name,
+    uri: album.uri,
+    spotifyUrl:
+      album.external_urls.spotify ?? `https://open.spotify.com/album/${album.id}`,
+    albumType: album.album_type,
+    releaseDate: album.release_date,
+    artists: album.artists.map((artist) => artist.name),
+    imageUrl: album.images[0]?.url ?? null,
+    tracks: tracks.map((track) => ({
+      id: track.id,
+      name: track.name,
+      uri: track.uri,
+      discNumber: track.disc_number,
+      trackNumber: track.track_number,
+    })),
+  };
+}
+
 export async function getArtistAlbums(artistId: string): Promise<SpotifyAlbumResult[]> {
   // Apps in Spotify's default "Development Mode" quota reject limit > 10 on this
   // endpoint with a generic "Invalid limit" 400, even though the docs say up to

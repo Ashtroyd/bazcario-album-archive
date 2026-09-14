@@ -4,8 +4,10 @@ import { getMyProfile } from "@/lib/auth";
 import { signout } from "@/app/actions/auth";
 import { FavoriteTrackPicker } from "@/components/FavoriteTrackPicker";
 import { ProfileSettingsCard } from "@/components/ProfileSettingsCard";
+import { SpotifyExtensionCard } from "@/components/SpotifyExtensionCard";
 import { MonthlyFavoritesMonthSection } from "@/components/MonthlyFavoritesMonthSection";
 import { cn, formatScore } from "@/lib/utils";
+import type { ExtensionAccessToken } from "@/lib/types";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -36,6 +38,15 @@ export default async function ProfilePage() {
       albums: { title: string } | null;
     } | null;
   }[];
+
+  const { data: extensionTokenData } = await supabase
+    .from("extension_access_tokens")
+    .select("id, user_id, label, created_at, expires_at, last_used_at, revoked_at")
+    .eq("user_id", user!.id)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+  const extensionTokens = (extensionTokenData ?? []) as ExtensionAccessToken[];
 
   // ---- Aggregate stats ----
   const overalls = ratedAlbums
@@ -163,6 +174,8 @@ export default async function ProfilePage() {
           ))}
         </div>
       </div>
+
+      <SpotifyExtensionCard connections={extensionTokens} />
 
       <MonthlyFavoritesMonthSection userId={user!.id} />
 
