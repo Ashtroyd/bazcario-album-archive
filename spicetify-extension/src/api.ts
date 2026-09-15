@@ -27,6 +27,24 @@ export type CurrentResponse =
   | ReadyTrack
   | { status: "album_missing" | "track_missing" };
 
+export type ReadySong = {
+  status: "ready";
+  song: {
+    id: string;
+    spotifyTrackId: string;
+    title: string;
+    artist: string;
+    albumTitle: string | null;
+    coverUrl: string | null;
+    spotifyUrl: string | null;
+    rating: number | null;
+    replayValue: ReplayValue | null;
+    notes: string | null;
+  };
+};
+
+export type SongRatingResponse = ReadySong | { status: "song_missing" };
+
 export class ArchiveApiError extends Error {
   constructor(
     message: string,
@@ -85,6 +103,29 @@ export function saveRating(
   },
 ): Promise<ReadyTrack> {
   return archiveRequest(config, "/api/extension/rating", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export function getSongRating(
+  config: ExtensionConfig,
+  spotifyTrackId: string,
+): Promise<SongRatingResponse> {
+  const params = new URLSearchParams({ spotifyTrackId });
+  return archiveRequest(config, `/api/extension/song-rating?${params}`);
+}
+
+export function saveSongRating(
+  config: ExtensionConfig,
+  input: {
+    spotifyTrackId: string;
+    rating: number | null;
+    replayValue: ReplayValue | null;
+    notes: string | null;
+  },
+): Promise<SongRatingResponse> {
+  return archiveRequest(config, "/api/extension/song-rating", {
     method: "PUT",
     body: JSON.stringify(input),
   });

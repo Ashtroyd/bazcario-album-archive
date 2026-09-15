@@ -64,6 +64,35 @@ export interface TrackRating {
   notes: string | null;
 }
 
+export interface Song {
+  id: string;
+  spotify_track_id: string;
+  spotify_album_id: string | null;
+  title: string;
+  artist: string;
+  album_title: string | null;
+  cover_image_url: string | null;
+  spotify_url: string | null;
+  release_date: string | null;
+  duration_ms: number | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface SongRating {
+  id: string;
+  song_id: string;
+  user_id: string;
+  rating: number;
+  replay_value: ReplayValue | null;
+  notes: string | null;
+  updated_at: string;
+}
+
+export interface SongWithMyRating extends Song {
+  my_rating: SongRating;
+}
+
 export interface ExtensionAccessToken {
   id: string;
   user_id: string;

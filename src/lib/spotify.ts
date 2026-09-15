@@ -149,6 +149,75 @@ type RawAlbum = {
   };
 };
 
+type RawTrack = {
+  id: string;
+  name: string;
+  duration_ms: number;
+  explicit: boolean;
+  external_urls: { spotify?: string };
+  artists: { name: string }[];
+  album: {
+    id: string;
+    name: string;
+    release_date: string;
+    images: { url: string }[];
+  };
+};
+
+export type SpotifyTrackDetails = {
+  id: string;
+  title: string;
+  artist: string;
+  albumId: string;
+  albumTitle: string;
+  releaseDate: string | null;
+  coverUrl: string | null;
+  spotifyUrl: string;
+  durationMs: number;
+};
+
+function mapSpotifyTrack(track: RawTrack): SpotifyTrackDetails {
+  const releaseDate = /^\d{4}-\d{2}-\d{2}$/.test(track.album.release_date)
+    ? track.album.release_date
+    : /^\d{4}-\d{2}$/.test(track.album.release_date)
+      ? `${track.album.release_date}-01`
+      : /^\d{4}$/.test(track.album.release_date)
+        ? `${track.album.release_date}-01-01`
+        : null;
+  return {
+    id: track.id,
+    title: track.name,
+    artist: track.artists.map((artist) => artist.name).join(", "),
+    albumId: track.album.id,
+    albumTitle: track.album.name,
+    releaseDate,
+    coverUrl: track.album.images[0]?.url ?? null,
+    spotifyUrl:
+      track.external_urls.spotify ?? `https://open.spotify.com/track/${track.id}`,
+    durationMs: track.duration_ms,
+  };
+}
+
+export async function searchTracks(
+  query: string,
+  limit = 8,
+): Promise<SpotifyTrackDetails[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const safeLimit = Math.max(1, Math.min(10, Math.trunc(limit)));
+  const data = await spotifyFetch<{ tracks: { items: RawTrack[] } }>(
+    `/search?q=${encodeURIComponent(q)}&type=track&market=GB&limit=${safeLimit}`,
+  );
+  return data.tracks.items.map(mapSpotifyTrack);
+}
+
+export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrackDetails> {
+  const track = await spotifyFetch<RawTrack>(
+    `/tracks/${encodeURIComponent(trackId)}?market=GB`,
+  );
+  return mapSpotifyTrack(track);
+}
+
 /** Full album metadata used when a listener adds an album from Spicetify. */
 export async function getSpotifyAlbum(albumId: string): Promise<SpotifyAlbumDetails> {
   const album = await spotifyFetch<RawAlbum>(`/albums/${encodeURIComponent(albumId)}?market=GB`);

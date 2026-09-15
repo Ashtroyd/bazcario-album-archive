@@ -28,7 +28,10 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
 - **Comments** — per album (schema supports per-track / per-rating too).
 - **Profile** — avatar upload, display name, and stats (avg rating, top genre).
 - **Spotify extension** — rate the currently playing track, set replay value,
-  and write notes directly inside Spotify through Spicetify.
+  and write notes directly inside Spotify through Spicetify, either as part of
+  an archived album or as an independent song rating.
+- **Song ratings** — search Spotify and keep a standalone song library whose
+  scores do not change album averages.
 - **Announcements** — follow artists (Spotify search, photo + a MusicBrainz
   type/country/years-active line for disambiguation — Spotify's own
   follower/genre data isn't available on a Developer Mode app) and see their
@@ -68,7 +71,7 @@ Fill in:
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Settings → API → `anon` `public` key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → `service_role` key (server-only; used only by the import script) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → `service_role` key (server-only; used by imports and authenticated Spicetify requests) |
 | `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` | [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) → create an app → Settings (Client Credentials flow, no redirect URI needed). Used by Announcements. |
 
 `.env.local` is git-ignored — never commit it.
@@ -83,9 +86,8 @@ This creates all tables, enums, the auto-profile and auto-overall triggers, the
 friends helper functions, every RLS policy, and the `covers` / `avatars` storage
 buckets. The script is idempotent and safe to re-run.
 
-Later migrations (`0002` through `0007`, including the Announcements
-feature's `followed_artists` / `artist_releases` tables) live in the same
-folder — apply each one the same way, in order.
+Later timestamped migrations, including Spicetify access and standalone song
+ratings, live in the same folder — apply every migration in filename order.
 
 ### 4. (Optional) Enable Google sign-in
 
@@ -148,8 +150,8 @@ and change the password.
 
 ## Visibility model (RLS)
 
-- **Albums & tracks** are a shared catalog — any signed-in user can see and rate
-  them, so any number of friends can rate the same album.
+- **Albums, album tracks, and songs** are a shared catalog — any signed-in user
+  can see and rate them, so any number of friends can rate the same recording.
 - **Ratings, track ratings, and profiles** are **friends-only by default**:
   visible to you, your accepted friends, or anyone whose profile is `public`.
 - The `profiles.visibility` enum (`friends` | `public` | `private`) and its
@@ -196,7 +198,7 @@ src/
     (auth)/{login,signup}/     # public auth pages
     (app)/                     # protected shell (nav + auth guard)
       page.tsx                 # dashboard
-      albums/  album/[id]/  album/new/
+      albums/  songs/  album/[id]/  album/new/
       album/[id]/compare/[friendId]/
       friends/  friends/[id]/  profile/  announcements/
     auth/callback/route.ts     # OAuth / email-confirm callback

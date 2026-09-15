@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AlbumCard } from "@/components/AlbumCard";
 import { LibraryFilters } from "@/components/LibraryFilters";
+import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
 import type { Album } from "@/lib/types";
 
 export default async function LibraryPage({
@@ -68,11 +69,17 @@ export default async function LibraryPage({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-2xl font-bold text-ink">Library</h1>
-        <span className="text-sm text-muted">
-          {list.length} album{list.length === 1 ? "" : "s"}
-        </span>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-ink">Album library</h1>
+          <p className="text-sm text-muted">
+            {list.length} album{list.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/album/new" className="btn btn-primary px-3 py-1.5">Add album</Link>
+          <LibraryModeSwitch active="albums" />
+        </div>
       </div>
 
       <LibraryFilters genres={genres} years={years} />

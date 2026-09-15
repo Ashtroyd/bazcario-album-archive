@@ -6,16 +6,16 @@ import { cn } from "@/lib/utils";
 import {
   IconHome,
   IconDisc,
-  IconPlus,
   IconUsers,
   IconMegaphone,
   IconBell,
+  IconHeadphones,
 } from "@/components/icons";
 
 const ITEMS = [
   { href: "/", label: "Home", Icon: IconHome, tour: undefined },
-  { href: "/albums", label: "Library", Icon: IconDisc, tour: undefined },
-  { href: "/album/new", label: "Add", Icon: IconPlus, tour: "add-album" },
+  { href: "/albums", label: "Albums", Icon: IconDisc, tour: undefined },
+  { href: "/songs", label: "Songs", Icon: IconHeadphones, tour: undefined },
   { href: "/friends", label: "Friends", Icon: IconUsers, tour: "friends-nav" },
   { href: "/announcements", label: "News", Icon: IconMegaphone, tour: "announcements-nav" },
   { href: "/notifications", label: "Alerts", Icon: IconBell, tour: "notifications-bell" },

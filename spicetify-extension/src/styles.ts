@@ -62,6 +62,38 @@ export const PANEL_STYLES = `
   padding: 18px 16px 28px;
   font-family: var(--encore-body-font-stack, CircularSp, system-ui, sans-serif);
 }
+.baa-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 18px;
+  padding: 3px;
+  border: 1px solid var(--baa-line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+}
+.baa-mode button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 9px;
+  color: var(--baa-muted);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.baa-mode button[aria-selected="true"] {
+  color: #171717;
+  background: var(--baa-accent);
+}
+.baa-song-album {
+  margin: -7px 0 15px;
+  color: var(--baa-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .baa-panel * { box-sizing: border-box; }
 .baa-kicker { color: var(--baa-muted); font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
 .baa-title { margin: 4px 0 0; font: 600 23px/1.08 Iowan Old Style, Georgia, serif; letter-spacing: -.02em; }

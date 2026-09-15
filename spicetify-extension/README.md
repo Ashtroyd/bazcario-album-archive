@@ -1,7 +1,9 @@
 # Album Archive for Spicetify — beta
 
 Rate the track currently playing in Spotify and save it directly to
-[Album Archive](https://bazcario-album-archive.vercel.app).
+[Album Archive](https://bazcario-album-archive.vercel.app). Choose **Song** for
+an independent rating or **Album track** to contribute to an archived album's
+average.
 
 ## Install
 

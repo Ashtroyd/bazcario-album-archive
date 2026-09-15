@@ -1,11 +1,14 @@
 import {
   ArchiveApiError,
   getCurrent,
+  getSongRating,
   importAlbum,
   saveRating,
+  saveSongRating,
   type CurrentResponse,
   type ReadyTrack,
   type ReplayValue,
+  type SongRatingResponse,
 } from "./api";
 import { readPlayingTrack, type PlayingTrack } from "./player";
 import {
@@ -107,18 +110,41 @@ function EmptyState({ title, body }: { title: string; body: string }) {
   );
 }
 
+function ModeSwitch({
+  mode,
+  onChange,
+}: {
+  mode: "song" | "album";
+  onChange: (mode: "song" | "album") => void;
+}) {
+  return (
+    <div className="baa-mode" role="tablist" aria-label="Rating type">
+      <button type="button" role="tab" aria-selected={mode === "song"} onClick={() => onChange("song")}>
+        Song
+      </button>
+      <button type="button" role="tab" aria-selected={mode === "album"} onClick={() => onChange("album")}>
+        Album track
+      </button>
+    </div>
+  );
+}
+
 function RatingPanel({
   data,
   playing,
   config,
   onSaved,
   onDisconnect,
+  mode,
+  onModeChange,
 }: {
   data: ReadyTrack;
   playing: PlayingTrack;
   config: ExtensionConfig;
   onSaved: (next: ReadyTrack) => void;
   onDisconnect: () => void;
+  mode: "song" | "album";
+  onModeChange: (mode: "song" | "album") => void;
 }) {
   const [rating, setRating] = React.useState(data.track.rating == null ? "" : String(data.track.rating));
   const [replay, setReplay] = React.useState<ReplayValue | null>(data.track.replayValue);
@@ -161,6 +187,7 @@ function RatingPanel({
   const score = rating === "" ? 0 : Math.max(0, Math.min(10, Number(rating) || 0));
   return (
     <div className="baa-panel">
+      <ModeSwitch mode={mode} onChange={onModeChange} />
       <div style={{ display: "flex", alignItems: "start", gap: "8px" }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="baa-kicker">Now rating</div>
@@ -206,9 +233,11 @@ function RatingPanel({
         value={score}
         aria-label={`Rating for ${data.track.name}`}
         onChange={(event: ChangeEvent<HTMLInputElement>) => setRating(event.target.value)}
-        onPointerUp={() => void persist({})}
+        onPointerUp={(event) => void persist({ rating: event.currentTarget.value })}
         onKeyUp={(event: KeyboardEvent<HTMLInputElement>) => {
-          if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) void persist({});
+          if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+            void persist({ rating: event.currentTarget.value });
+          }
         }}
       />
 
@@ -248,11 +277,156 @@ function RatingPanel({
   );
 }
 
+function SingleSongPanel({
+  data,
+  playing,
+  config,
+  onSaved,
+  onDisconnect,
+  mode,
+  onModeChange,
+}: {
+  data: SongRatingResponse;
+  playing: PlayingTrack;
+  config: ExtensionConfig;
+  onSaved: (next: SongRatingResponse) => void;
+  onDisconnect: () => void;
+  mode: "song" | "album";
+  onModeChange: (mode: "song" | "album") => void;
+}) {
+  const saved = data.status === "ready" ? data.song : null;
+  const [rating, setRating] = React.useState(saved?.rating == null ? "" : String(saved.rating));
+  const [replay, setReplay] = React.useState<ReplayValue | null>(saved?.replayValue ?? null);
+  const [notes, setNotes] = React.useState(saved?.notes ?? "");
+  const [saveState, setSaveState] = React.useState<"idle" | "saving" | "saved">("idle");
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function persist(overrides: Partial<{ rating: string; replay: ReplayValue | null; notes: string }>) {
+    const ratingValue = overrides.rating ?? rating;
+    const parsedRating = ratingValue === "" ? null : Number(ratingValue);
+    if (parsedRating == null && !saved) {
+      setError("Choose a score before saving this song.");
+      return;
+    }
+    if (parsedRating != null && (!Number.isFinite(parsedRating) || parsedRating < 0 || parsedRating > 10)) {
+      setError("Use a score from 0 to 10.");
+      return;
+    }
+
+    setSaveState("saving");
+    setError(null);
+    try {
+      const next = await saveSongRating(config, {
+        spotifyTrackId: playing.spotifyTrackId,
+        rating: parsedRating,
+        replayValue: overrides.replay === undefined ? replay : overrides.replay,
+        notes: overrides.notes === undefined ? notes || null : overrides.notes || null,
+      });
+      onSaved(next);
+      setSaveState("saved");
+      window.setTimeout(() => setSaveState("idle"), 1300);
+    } catch (caught) {
+      setSaveState("idle");
+      setError(friendlyError(caught));
+    }
+  }
+
+  function chooseReplay(value: ReplayValue) {
+    const next = replay === value ? null : value;
+    setReplay(next);
+    void persist({ replay: next });
+  }
+
+  const score = rating === "" ? 0 : Math.max(0, Math.min(10, Number(rating) || 0));
+  return (
+    <div className="baa-panel">
+      <ModeSwitch mode={mode} onChange={onModeChange} />
+      <div style={{ display: "flex", alignItems: "start", gap: "8px" }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="baa-kicker">Standalone song</div>
+          <h2 className="baa-title">{saved?.title ?? playing.trackName}</h2>
+          <p className="baa-subtitle">{saved?.artist ?? playing.artistName}</p>
+        </div>
+        <button className="baa-settings" type="button" onClick={onDisconnect} title="Connection settings" aria-label="Connection settings">•••</button>
+      </div>
+
+      {playing.imageUrl && <img className="baa-cover" src={playing.imageUrl} alt="" />}
+      <p className="baa-song-album">{saved?.albumTitle ?? playing.albumName}</p>
+
+      <div className="baa-score-row">
+        <label className="baa-score-label" htmlFor="baa-song-score">Your score<br />out of ten</label>
+        <input
+          id="baa-song-score"
+          className="baa-score"
+          type="number"
+          min="0"
+          max="10"
+          step="0.01"
+          value={rating}
+          placeholder="—"
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setRating(event.target.value)}
+          onBlur={() => void persist({})}
+          onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
+        />
+      </div>
+      <input
+        className="baa-range"
+        type="range"
+        min="0"
+        max="10"
+        step="0.1"
+        value={score}
+        aria-label={`Standalone rating for ${playing.trackName}`}
+        onChange={(event: ChangeEvent<HTMLInputElement>) => setRating(event.target.value)}
+        onPointerUp={(event) => void persist({ rating: event.currentTarget.value })}
+        onKeyUp={(event: KeyboardEvent<HTMLInputElement>) => {
+          if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+            void persist({ rating: event.currentTarget.value });
+          }
+        }}
+      />
+
+      <div className="baa-section">
+        <span className="baa-section-label">Would replay?</span>
+        <div className="baa-replay">
+          {REPLAY_VALUES.map((value) => (
+            <button key={value} type="button" data-active={replay === value} onClick={() => chooseReplay(value)}>
+              {REPLAY_LABELS[value]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className="baa-section baa-section-label">
+        Listening note
+        <textarea
+          className="baa-notes"
+          value={notes}
+          maxLength={1000}
+          placeholder="What makes this song stick?"
+          onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setNotes(event.target.value)}
+          onBlur={() => void persist({})}
+        />
+      </label>
+
+      {error && <div className="baa-error">{error}</div>}
+      <div className="baa-actions">
+        <a className="baa-link" href={`${config.siteUrl}/songs`} target="_blank" rel="noreferrer">Open song library</a>
+        <span className="baa-status">{saveState === "saving" ? "Saving…" : saveState === "saved" ? "✓ Saved" : ""}</span>
+      </div>
+    </div>
+  );
+}
+
 function ArchivePanel() {
   const [config, setConfig] = React.useState<ExtensionConfig | null>(() => loadConfig());
   const [showSettings, setShowSettings] = React.useState(false);
   const [playing, setPlaying] = React.useState<PlayingTrack | null>(() => readPlayingTrack());
   const [current, setCurrent] = React.useState<CurrentResponse | null>(null);
+  const [songCurrent, setSongCurrent] = React.useState<SongRatingResponse | null>(null);
+  const [mode, setMode] = React.useState<"song" | "album">("album");
   const [loading, setLoading] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -264,8 +438,14 @@ function ArchivePanel() {
     setLoading(true);
     setError(null);
     try {
-      const result = await getCurrent(activeConfig, track.spotifyAlbumId, track.spotifyTrackId);
-      if (version === requestVersionRef.current) setCurrent(result);
+      const [albumResult, songResult] = await Promise.all([
+        getCurrent(activeConfig, track.spotifyAlbumId, track.spotifyTrackId),
+        getSongRating(activeConfig, track.spotifyTrackId),
+      ]);
+      if (version === requestVersionRef.current) {
+        setCurrent(albumResult);
+        setSongCurrent(songResult);
+      }
     } catch (caught) {
       if (version === requestVersionRef.current) setError(friendlyError(caught));
     } finally {
@@ -282,6 +462,7 @@ function ArchivePanel() {
 
   React.useEffect(() => {
     setCurrent(null);
+    setSongCurrent(null);
     if (playing && config) void load(playing, config);
   }, [playing, config]);
 
@@ -295,6 +476,7 @@ function ArchivePanel() {
     clearConfig();
     setConfig(null);
     setCurrent(null);
+    setSongCurrent(null);
     setShowSettings(true);
   }
 
@@ -331,9 +513,24 @@ function ArchivePanel() {
       </div>
     );
   }
+  if (mode === "song" && songCurrent) {
+    return (
+      <SingleSongPanel
+        key={playing.spotifyTrackId}
+        data={songCurrent}
+        playing={playing}
+        config={config}
+        onSaved={setSongCurrent}
+        onDisconnect={() => setShowSettings(true)}
+        mode={mode}
+        onModeChange={setMode}
+      />
+    );
+  }
   if (current?.status === "album_missing" || current?.status === "track_missing") {
     return (
       <div className="baa-panel">
+        <ModeSwitch mode={mode} onChange={setMode} />
         {playing.imageUrl && <img className="baa-cover" src={playing.imageUrl} alt="" />}
         <div className="baa-kicker">Not linked yet</div>
         <h2 className="baa-title">{playing.albumName}</h2>
@@ -360,6 +557,8 @@ function ArchivePanel() {
         config={config}
         onSaved={setCurrent}
         onDisconnect={() => setShowSettings(true)}
+        mode={mode}
+        onModeChange={setMode}
       />
     );
   }

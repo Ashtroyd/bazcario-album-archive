@@ -3,7 +3,7 @@
 set -eu
 
 extension_name="album-archive.js"
-release_tag="spicetify-v0.1.0-beta.1"
+release_tag="spicetify-v0.2.0-beta.1"
 default_url="https://github.com/Ashtroyd/bazcario-album-archive/releases/download/${release_tag}/${extension_name}"
 extension_url="${ALBUM_ARCHIVE_EXTENSION_URL:-$default_url}"
 
