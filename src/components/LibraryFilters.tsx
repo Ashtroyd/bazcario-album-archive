@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import type { AlbumScope } from "@/components/AlbumScopeTabs";
 
 const selectCls =
   "rounded-xl border border-line bg-paper px-2 py-2 text-sm text-body outline-none transition-colors focus:border-line-strong";
@@ -10,13 +11,22 @@ const selectCls =
 export function LibraryFilters({
   genres,
   years,
+  scope,
 }: {
   genres: string[];
   years: number[];
+  scope: AlbumScope;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   function set(key: string, value: string) {
     const next = new URLSearchParams(sp.toString());
@@ -32,12 +42,19 @@ export function LibraryFilters({
 
   const hasFilters = ["q", "genre", "year", "sort"].some((k) => sp.get(k));
 
+  function clearFilters() {
+    router.push(scope === "mine" ? "/albums" : `/albums?scope=${scope}`);
+  }
+
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <input
         defaultValue={sp.get("q") ?? ""}
         onChange={(e) => onSearch(e.target.value)}
         placeholder="Search title or artist…"
+        aria-label="Search albums by title or artist"
+        name="q"
+        autoComplete="off"
         className="input sm:max-w-xs sm:flex-1"
       />
       <div className="flex items-center gap-2">
@@ -74,13 +91,13 @@ export function LibraryFilters({
           aria-label="Sort"
         >
           <option value="recent">Newest</option>
-          <option value="score">Your score</option>
+          <option value="score">{scope === "friends" ? "Friend score" : "Your score"}</option>
           <option value="title">Title</option>
           <option value="year">Year</option>
         </select>
         {hasFilters && (
           <button
-            onClick={() => router.push("/albums")}
+            onClick={clearFilters}
             className="btn btn-ghost px-2 py-1.5 text-sm"
           >
             Clear
