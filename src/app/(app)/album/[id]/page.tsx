@@ -8,6 +8,7 @@ import { TrackRatingTable } from "@/components/TrackRatingTable";
 import { RatingMetaForm } from "@/components/RatingMetaForm";
 import { Comments } from "@/components/Comments";
 import { AlbumActionsMenu } from "@/components/AlbumActionsMenu";
+import { AlbumLibraryStatus } from "@/components/AlbumLibraryStatus";
 import { IconHeart, IconMoon } from "@/components/icons";
 import { formatDate, formatScore } from "@/lib/utils";
 import type {
@@ -25,6 +26,10 @@ type OtherRater = {
   profiles: { display_name: string | null; avatar_url: string | null } | null;
 };
 
+type AlbumWithCreator = Album & {
+  profiles: { display_name: string | null; avatar_url: string | null } | null;
+};
+
 export default async function AlbumDetailPage({
   params,
 }: {
@@ -38,11 +43,11 @@ export default async function AlbumDetailPage({
 
   const { data: album } = await supabase
     .from("albums")
-    .select("*")
+    .select("*, profiles!albums_created_by_fkey(display_name, avatar_url)")
     .eq("id", id)
     .maybeSingle();
   if (!album) notFound();
-  const a = album as Album;
+  const a = album as unknown as AlbumWithCreator;
 
   const { data: tracksData } = await supabase
     .from("tracks")
@@ -121,6 +126,7 @@ export default async function AlbumDetailPage({
   });
 
   const isOwner = a.created_by === user!.id;
+  const isInMyLibrary = myRating !== null || myTrackRatings.length > 0;
   const favName = tracks.find((t) => t.id === myRating?.favorite_track_id)?.name;
   const leastName = tracks.find(
     (t) => t.id === myRating?.least_favorite_track_id,
@@ -144,6 +150,24 @@ export default async function AlbumDetailPage({
         className="relative overflow-hidden rounded-2xl px-4 pt-10 pb-8 shadow-[0_8px_24px_rgba(38,37,33,0.16)]"
         style={{ background: heroGradient }}
       >
+        <div
+          className="absolute top-3 left-4 flex items-center gap-2 rounded-full border bg-black/15 py-1 pr-2.5 pl-1 backdrop-blur-sm"
+          style={chipStyle}
+        >
+          <Avatar
+            url={a.profiles?.avatar_url}
+            name={isOwner ? "You" : a.profiles?.display_name}
+            size={22}
+          />
+          <span className="text-xs">
+            Added by{" "}
+            <span className="font-medium">
+              {isOwner
+                ? "you"
+                : a.profiles?.display_name?.trim() || "another member"}
+            </span>
+          </span>
+        </div>
         <div className="absolute top-3 right-4">
           <AlbumActionsMenu albumId={a.id} title={a.title} isOwner={isOwner} />
         </div>
@@ -236,6 +260,14 @@ export default async function AlbumDetailPage({
       </div>
 
       <div className="mx-auto max-w-4xl space-y-8">
+        <AlbumLibraryStatus
+          isInMyLibrary={isInMyLibrary}
+          friends={others.map((other) => ({
+            name: other.profiles?.display_name ?? null,
+            avatarUrl: other.profiles?.avatar_url ?? null,
+          }))}
+        />
+
         {/* Friends who also rated */}
         {others.length > 0 && (
           <section>
@@ -289,7 +321,7 @@ export default async function AlbumDetailPage({
         {/* Album-level details */}
         <section className="space-y-3">
           <h2 className="font-serif text-lg font-semibold text-ink">
-            Album details
+            Your album details
           </h2>
           <RatingMetaForm albumId={a.id} tracks={tracks} rating={myRating} />
         </section>
