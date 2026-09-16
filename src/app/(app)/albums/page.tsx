@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { AlbumCard } from "@/components/AlbumCard";
+import {
+  AlbumCard,
+  type AlbumCardRating,
+} from "@/components/AlbumCard";
 import { AlbumScopeTabs, type AlbumScope } from "@/components/AlbumScopeTabs";
 import { LibraryFilters } from "@/components/LibraryFilters";
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
@@ -55,22 +58,48 @@ export default async function LibraryPage({
       ) as string[],
     ),
   );
-  const { data: friendRatings } = friendIds.length
+  const { data: friendRatingsData } = friendIds.length
     ? await supabase
         .from("ratings")
-        .select("album_id, overall_rating")
+        .select(
+          "album_id, user_id, overall_rating, profiles(display_name, avatar_url)",
+        )
         .in("user_id", friendIds)
     : { data: [] };
-  const friendAlbumIds = new Set(
-    (friendRatings ?? []).map((rating) => rating.album_id as string),
-  );
+
+  type FriendAlbumRating = {
+    album_id: string;
+    user_id: string;
+    overall_rating: number | string | null;
+    profiles: {
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  };
+  const friendRatings = (friendRatingsData ?? []) as unknown as FriendAlbumRating[];
+  const friendRatingsByAlbum = new Map<string, FriendAlbumRating[]>();
   const friendScoreMap = new Map<string, number>();
-  for (const rating of friendRatings ?? []) {
-    if (rating.overall_rating == null) continue;
-    const score = Number(rating.overall_rating);
-    const current = friendScoreMap.get(rating.album_id as string);
-    if (current == null || score > current) friendScoreMap.set(rating.album_id as string, score);
+  for (const rating of friendRatings) {
+    const albumRatings = friendRatingsByAlbum.get(rating.album_id) ?? [];
+    albumRatings.push(rating);
+    friendRatingsByAlbum.set(rating.album_id, albumRatings);
+
+    if (rating.overall_rating != null) {
+      const score = Number(rating.overall_rating);
+      const current = friendScoreMap.get(rating.album_id);
+      if (current == null || score > current) {
+        friendScoreMap.set(rating.album_id, score);
+      }
+    }
   }
+  for (const albumRatings of friendRatingsByAlbum.values()) {
+    albumRatings.sort((a, b) => {
+      const aScore = a.overall_rating == null ? -1 : Number(a.overall_rating);
+      const bScore = b.overall_rating == null ? -1 : Number(b.overall_rating);
+      return bScore - aScore;
+    });
+  }
+  const friendAlbumIds = new Set(friendRatingsByAlbum.keys());
 
   const scope: AlbumScope =
     sp.scope === "friends" || sp.scope === "all" ? sp.scope : "mine";
@@ -129,6 +158,31 @@ export default async function LibraryPage({
     }
     const query = params.toString();
     return query ? `/albums?${query}` : "/albums";
+  };
+  const cardRating = (albumId: string): AlbumCardRating => {
+    if (scope !== "friends" && scoreMap.has(albumId)) {
+      return { kind: "self", score: scoreMap.get(albumId) ?? null };
+    }
+
+    const friends = friendRatingsByAlbum.get(albumId) ?? [];
+    const primary = friends[0];
+    if (primary) {
+      return {
+        kind: "friend",
+        score:
+          primary.overall_rating == null
+            ? null
+            : Number(primary.overall_rating),
+        name: primary.profiles?.display_name ?? null,
+        avatarUrl: primary.profiles?.avatar_url ?? null,
+        additionalCount: friends.length - 1,
+      };
+    }
+
+    if (scope === "mine") {
+      return { kind: "self", score: null };
+    }
+    return { kind: "unrated" };
   };
 
   return (
@@ -211,7 +265,7 @@ export default async function LibraryPage({
           className="animate-scope-in grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
         >
           {list.map((a) => (
-            <AlbumCard key={a.id} album={a} myScore={scoreMap.get(a.id) ?? null} />
+            <AlbumCard key={a.id} album={a} rating={cardRating(a.id)} />
           ))}
         </div>
       )}

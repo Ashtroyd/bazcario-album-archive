@@ -78,9 +78,11 @@ export default async function DashboardPage() {
               <AlbumCard
                 key={r.album!.id}
                 album={r.album!}
-                myScore={
-                  r.overall_rating != null ? Number(r.overall_rating) : null
-                }
+                rating={{
+                  kind: "self",
+                  score:
+                    r.overall_rating != null ? Number(r.overall_rating) : null,
+                }}
               />
             ))}
           </div>

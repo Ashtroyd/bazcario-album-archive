@@ -218,9 +218,13 @@ export default async function FriendProfilePage({
             <div key={r.album!.id} className="space-y-1">
               <AlbumCard
                 album={r.album!}
-                myScore={
-                  r.overall_rating != null ? Number(r.overall_rating) : null
-                }
+                rating={{
+                  kind: "friend",
+                  score:
+                    r.overall_rating != null ? Number(r.overall_rating) : null,
+                  name: profile.display_name,
+                  avatarUrl: profile.avatar_url,
+                }}
               />
               <Link
                 href={`/album/${r.album!.id}/compare/${id}`}
