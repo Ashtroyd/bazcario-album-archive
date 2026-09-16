@@ -36,7 +36,9 @@ function RatingProvenance({ rating }: { rating: AlbumCardRating }) {
     const name = rating.name?.trim() || "A friend";
     return (
       <div className="mt-auto flex min-h-9 items-center gap-2 rounded-lg border border-line bg-ivory px-2 py-1.5 transition-colors group-hover:border-line-strong">
-        <Avatar url={rating.avatarUrl} name={name} size={21} />
+        <span aria-hidden="true" className="shrink-0">
+          <Avatar url={rating.avatarUrl} name={name} size={21} />
+        </span>
         <span className="min-w-0 flex-1 truncate text-xs text-body">
           <span className="font-medium text-ink">{name}</span>{" "}
           {rating.score == null ? "started rating" : "rated"}
