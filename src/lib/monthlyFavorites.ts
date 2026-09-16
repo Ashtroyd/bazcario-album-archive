@@ -23,8 +23,17 @@ export function monthParam(key: string): string {
 
 /** '2026-07' route param -> full '2026-07-01' month key. */
 export function monthParamToKey(param: string): string | null {
-  if (!/^\d{4}-\d{2}$/.test(param)) return null;
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(param)) return null;
   return `${param}-01`;
+}
+
+/** Whether a full month key is canonical and is not later than this month. */
+export function isEditableMonthKey(
+  key: string,
+  date: Date = new Date(),
+): boolean {
+  const param = key.slice(0, 7);
+  return monthParamToKey(param) === key && key <= monthKey(date);
 }
 
 export function formatMonthLabel(key: string): string {

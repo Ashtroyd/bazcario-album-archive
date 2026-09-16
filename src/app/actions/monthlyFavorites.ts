@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isEditableMonthKey } from "@/lib/monthlyFavorites";
 
 /** Upsert one favourite-song slot (1-5) for a given month. */
 export async function setMonthlyFavorite(formData: FormData) {
@@ -17,7 +18,14 @@ export async function setMonthlyFavorite(formData: FormData) {
   const artist = String(formData.get("artist") || "").trim();
   const cover_url = String(formData.get("cover_url") || "").trim() || null;
   const external_id = String(formData.get("external_id") || "").trim() || null;
-  if (!month || position < 1 || position > 5 || !title || !artist) return;
+  if (
+    !isEditableMonthKey(month) ||
+    position < 1 ||
+    position > 5 ||
+    !title ||
+    !artist
+  )
+    return;
 
   await supabase.from("monthly_favorites").upsert(
     {
@@ -68,7 +76,7 @@ export async function moveMonthlyFavorite(formData: FormData) {
   const id = String(formData.get("id") || "");
   const month = String(formData.get("month") || "");
   const target = Number(formData.get("target") || 0);
-  if (!id || !month || target < 1 || target > 5) return;
+  if (!id || !isEditableMonthKey(month) || target < 1 || target > 5) return;
 
   await supabase
     .from("monthly_favorites")
@@ -102,7 +110,7 @@ export async function swapMonthlyFavoritePosition(formData: FormData) {
   const cover_url = String(formData.get("cover_url") || "").trim() || null;
   const external_id = String(formData.get("external_id") || "").trim() || null;
   if (
-    !month ||
+    !isEditableMonthKey(month) ||
     !rowAId ||
     !rowBId ||
     a < 1 ||

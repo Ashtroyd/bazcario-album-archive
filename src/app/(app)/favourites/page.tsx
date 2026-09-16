@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { MonthlyFavoritesPicker } from "@/components/MonthlyFavoritesPicker";
+import { MonthlyFavoritesMonthChooser } from "@/components/MonthlyFavoritesMonthChooser";
 import {
   formatMonthLabel,
   getMonthlyFavorites,
@@ -26,15 +27,23 @@ export default async function FavouritesPage() {
       <div>
         <h1 className="font-serif text-2xl font-bold text-ink">Favourite songs</h1>
         <p className="text-muted">
-          Pick up to 5 songs you loved this month — friends can see your list.
+          Pick up to 5 songs for a month — friends can see your list.
         </p>
       </div>
 
+      <MonthlyFavoritesMonthChooser
+        key={currentMonth}
+        month={currentMonth}
+        currentMonth={currentMonth}
+      />
+
       <section className="space-y-3">
-        <h2 className="font-serif text-lg font-semibold text-ink">
-          {formatMonthLabel(currentMonth)}
-        </h2>
-        <MonthlyFavoritesPicker month={currentMonth} picks={picks} />
+        <h2 className="sr-only">{formatMonthLabel(currentMonth)} picks</h2>
+        <MonthlyFavoritesPicker
+          key={currentMonth}
+          month={currentMonth}
+          picks={picks}
+        />
       </section>
 
       {pastMonths.length > 0 && (
