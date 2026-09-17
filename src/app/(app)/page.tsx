@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { AlbumCard } from "@/components/AlbumCard";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { DashboardSongRatings } from "@/components/DashboardSongRatings";
 import { MonthlyFavoritesCard } from "@/components/MonthlyFavoritesCard";
 import { getFriendActivity } from "@/lib/activity";
+import { getMySongRatings } from "@/lib/songRatings";
 import {
   formatMonthLabel,
   getFriendsMonthlyFavorites,
@@ -18,34 +20,38 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const profile = await getMyProfile();
-
-  const { data: mineData } = await supabase
-    .from("ratings")
-    .select("overall_rating, updated_at, album:albums(*)")
-    .eq("user_id", user!.id)
-    .order("updated_at", { ascending: false })
-    .limit(8);
+  const currentMonth = monthKey();
+  const [profile, mineResult, friendshipsResult, mySongs, myPicks] =
+    await Promise.all([
+      getMyProfile(),
+      supabase
+        .from("ratings")
+        .select("overall_rating, updated_at, album:albums(*)")
+        .eq("user_id", user!.id)
+        .order("updated_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("friendships")
+        .select("user_id, friend_id")
+        .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`)
+        .eq("status", "accepted"),
+      getMySongRatings(supabase, user!.id, 4),
+      getMonthlyFavorites(supabase, user!.id, currentMonth),
+    ]);
+  const mineData = mineResult.data;
   const mine = (mineData ?? []) as unknown as {
     overall_rating: number | null;
     album: Album | null;
   }[];
   const myAlbums = mine.filter((r) => r.album);
 
-  const { data: fr } = await supabase
-    .from("friendships")
-    .select("user_id, friend_id")
-    .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`)
-    .eq("status", "accepted");
+  const fr = friendshipsResult.data;
   const friendIds = (fr ?? []).map((f) =>
     f.user_id === user!.id ? f.friend_id : f.user_id,
   ) as string[];
 
-  const activity = await getFriendActivity(supabase, user!.id, friendIds);
-
-  const currentMonth = monthKey();
-  const [myPicks, friendsPicks] = await Promise.all([
-    getMonthlyFavorites(supabase, user!.id, currentMonth),
+  const [activity, friendsPicks] = await Promise.all([
+    getFriendActivity(supabase, user!.id, friendIds),
     getFriendsMonthlyFavorites(supabase, friendIds, currentMonth),
   ]);
 
@@ -55,12 +61,16 @@ export default async function DashboardPage() {
         <h1 className="font-serif text-2xl font-bold text-ink">
           Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
         </h1>
-        <p className="text-muted">Your album ratings, synced everywhere.</p>
+        <p className="text-muted">
+          Your album and song ratings, synced everywhere.
+        </p>
       </div>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-serif text-lg font-semibold text-ink">Your albums</h2>
+          <h2 className="font-serif text-lg font-semibold text-ink">
+            Recent album ratings
+          </h2>
           <Link href="/albums" className="text-sm text-accent hover:underline">
             View all →
           </Link>
@@ -86,6 +96,35 @@ export default async function DashboardPage() {
               />
             ))}
           </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-serif text-lg font-semibold text-ink">
+              Standalone song ratings
+            </h2>
+            <p className="text-sm text-muted">
+              Individual scores that stay separate from album averages.
+            </p>
+          </div>
+          <Link
+            href="/songs"
+            className="shrink-0 text-sm text-accent hover:underline"
+          >
+            {mySongs.length > 0 ? "View all →" : "Rate a song →"}
+          </Link>
+        </div>
+        {mySongs.length === 0 ? (
+          <div className="card text-sm text-muted">
+            You haven&apos;t rated a standalone song yet.{" "}
+            <Link href="/songs" className="text-accent hover:underline">
+              Rate one without changing an album average →
+            </Link>
+          </div>
+        ) : (
+          <DashboardSongRatings ratings={mySongs} />
         )}
       </section>
 

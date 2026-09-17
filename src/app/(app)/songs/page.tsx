@@ -1,7 +1,7 @@
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
 import { SongRatingsManager } from "@/components/SongRatingsManager";
 import { createClient } from "@/lib/supabase/server";
-import type { Song, SongRating, SongWithMyRating } from "@/lib/types";
+import { getMySongRatings } from "@/lib/songRatings";
 
 export default async function SongsPage() {
   const supabase = await createClient();
@@ -9,26 +9,7 @@ export default async function SongsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data } = await supabase
-    .from("song_ratings")
-    .select("*, song:songs(*)")
-    .eq("user_id", user!.id)
-    .order("updated_at", { ascending: false });
-
-  const ratings = (data ?? []).flatMap((row) => {
-    const song = row.song as unknown as Song | null;
-    if (!song) return [];
-    const rating: SongRating = {
-      id: row.id as string,
-      song_id: row.song_id as string,
-      user_id: row.user_id as string,
-      rating: Number(row.rating),
-      replay_value: row.replay_value,
-      notes: row.notes as string | null,
-      updated_at: row.updated_at as string,
-    };
-    return [{ ...song, my_rating: rating } satisfies SongWithMyRating];
-  });
+  const ratings = await getMySongRatings(supabase, user!.id);
 
   return (
     <div className="space-y-5">
