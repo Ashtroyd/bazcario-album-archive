@@ -16,11 +16,11 @@ export async function saveTrackRating(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { ok: false as const, error: "Sign in again to save ratings." };
 
   const track_id = String(formData.get("track_id") || "");
   const album_id = String(formData.get("album_id") || "");
-  if (!track_id) return;
+  if (!track_id) return { ok: false as const, error: "This track could not be saved." };
 
   const ratingRaw = String(formData.get("rating") || "").trim();
   const replayRaw = String(formData.get("replay_value") || "").trim();
@@ -28,15 +28,19 @@ export async function saveTrackRating(formData: FormData) {
   const replay_value = REPLAY.has(replayRaw) ? (replayRaw as ReplayValue) : null;
 
   if (ratingRaw === "") {
-    await supabase
+    const { error } = await supabase
       .from("track_ratings")
       .delete()
       .eq("track_id", track_id)
       .eq("user_id", user.id);
+    if (error) return { ok: false as const, error: "Your change was not saved." };
   } else {
-    const rating = Math.max(0, Math.min(10, Number(ratingRaw)));
-    if (Number.isNaN(rating)) return;
-    await supabase.from("track_ratings").upsert(
+    const parsedRating = Number(ratingRaw);
+    if (!Number.isFinite(parsedRating)) {
+      return { ok: false as const, error: "Use a score from 0 to 10." };
+    }
+    const rating = Math.max(0, Math.min(10, parsedRating));
+    const { error } = await supabase.from("track_ratings").upsert(
       {
         track_id,
         user_id: user.id,
@@ -46,8 +50,10 @@ export async function saveTrackRating(formData: FormData) {
       },
       { onConflict: "track_id,user_id" },
     );
+    if (error) return { ok: false as const, error: "Your change was not saved." };
   }
   if (album_id) revalidatePath(`/album/${album_id}`);
+  return { ok: true as const };
 }
 
 /** Upsert album-level rating metadata (first listen, favorites, notes). */

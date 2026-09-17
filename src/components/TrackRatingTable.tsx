@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { saveTrackRating } from "@/app/actions/ratings";
 import { Avatar } from "@/components/Avatar";
 import { REPLAY_VALUES, type ReplayValue } from "@/lib/types";
@@ -18,6 +18,19 @@ type Row = {
   friends: FriendScore[];
 };
 
+type RatingSnapshot = {
+  rating: string;
+  replay: ReplayValue | "";
+  notes: string;
+};
+
+type SaveNotice =
+  | { kind: "saved"; trackName: string; undo: () => void }
+  | { kind: "undone"; trackName: string }
+  | { kind: "error"; trackName: string; message: string };
+
+type Toast = SaveNotice & { id: number };
+
 const SHORT: Record<ReplayValue, string> = {
   Low: "Low",
   Medium: "Med",
@@ -32,35 +45,215 @@ export function TrackRatingTable({
   albumId: string;
   tracks: Row[];
 }) {
+  const [toast, setToast] = useState<Toast | null>(null);
+  const toastIdRef = useRef(0);
+  const toastTimerRef = useRef<number | null>(null);
+
+  const showNotice = useCallback((notice: SaveNotice) => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    const id = ++toastIdRef.current;
+    setToast({ ...notice, id });
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast((current) => (current?.id === id ? null : current));
+    }, notice.kind === "error" ? 7000 : 6000);
+  }, []);
+
+  const dismissNotice = useCallback(() => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    setToast(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
   return (
-    <div className="space-y-2">
-      {tracks.map((t) => (
-        <TrackRow key={t.id} albumId={albumId} track={t} />
-      ))}
-    </div>
+    <>
+      <div className="space-y-2">
+        {tracks.map((t) => (
+          <TrackRow
+            key={t.id}
+            albumId={albumId}
+            track={t}
+            onNotice={showNotice}
+            onSaveStart={dismissNotice}
+          />
+        ))}
+      </div>
+
+      {toast ? (
+        <div
+          key={toast.id}
+          aria-live="polite"
+          aria-atomic="true"
+          className="rating-save-toast fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 z-50 overflow-hidden rounded-xl border border-white/10 bg-ink text-paper shadow-[0_18px_55px_rgba(38,37,33,0.3)] sm:right-6 sm:bottom-6 sm:left-auto sm:w-96"
+        >
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span
+              aria-hidden="true"
+              className={cn(
+                "grid size-8 shrink-0 place-items-center rounded-full border",
+                toast.kind === "error"
+                  ? "border-accent/60 bg-accent/15 text-accent"
+                  : "border-sage/60 bg-sage/15 text-sage",
+              )}
+            >
+              <span className="size-2 rounded-full bg-current" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-paper/60 uppercase">
+                {toast.kind === "saved"
+                  ? "Track updated"
+                  : toast.kind === "undone"
+                    ? "Change undone"
+                    : "Save interrupted"}
+              </p>
+              <p className="truncate text-sm font-medium">
+                {toast.kind === "error" ? toast.message : toast.trackName}
+              </p>
+            </div>
+            {toast.kind === "saved" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const undo = toast.undo;
+                  setToast(null);
+                  if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+                  undo();
+                }}
+                className="shrink-0 rounded-full border border-paper/25 px-3 py-1.5 text-xs font-semibold text-paper transition hover:border-paper/50 hover:bg-paper/10"
+              >
+                Undo
+              </button>
+            ) : null}
+          </div>
+          {toast.kind !== "error" ? <div aria-hidden="true" className="rating-save-toast-timer h-0.5 origin-left bg-accent" /> : null}
+        </div>
+      ) : null}
+    </>
   );
 }
 
-function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
+function snapshotsMatch(a: RatingSnapshot, b: RatingSnapshot): boolean {
+  return a.rating === b.rating && a.replay === b.replay && a.notes === b.notes;
+}
+
+function TrackRow({
+  albumId,
+  track,
+  onNotice,
+  onSaveStart,
+}: {
+  albumId: string;
+  track: Row;
+  onNotice: (notice: SaveNotice) => void;
+  onSaveStart: () => void;
+}) {
   const [rating, setRating] = useState(
     track.rating != null ? String(track.rating) : "",
   );
   const [replay, setReplay] = useState<ReplayValue | "">(track.replay ?? "");
   const [notes, setNotes] = useState(track.notes ?? "");
-  const [, startTransition] = useTransition();
-  const [saved, setSaved] = useState(false);
+  const [pendingSaves, setPendingSaves] = useState(0);
+  const initialSnapshotRef = useRef<RatingSnapshot>({
+    rating: track.rating != null ? String(track.rating) : "",
+    replay: track.replay ?? "",
+    notes: track.notes ?? "",
+  });
+  const latestTargetRef = useRef(initialSnapshotRef.current);
+  const confirmedSnapshotRef = useRef(initialSnapshotRef.current);
+  const saveQueueRef = useRef(Promise.resolve());
+  const requestIdRef = useRef(0);
+  const mountedRef = useRef(true);
 
-  function persist(over: Partial<{ rating: string; replay: string; notes: string }>) {
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  function applySnapshot(snapshot: RatingSnapshot) {
+    setRating(snapshot.rating);
+    setReplay(snapshot.replay);
+    setNotes(snapshot.notes);
+  }
+
+  function formDataFor(snapshot: RatingSnapshot): FormData {
     const fd = new FormData();
     fd.set("track_id", track.id);
     fd.set("album_id", albumId);
-    fd.set("rating", over.rating ?? rating);
-    fd.set("replay_value", over.replay ?? replay);
-    fd.set("notes", over.notes ?? notes);
-    startTransition(async () => {
-      await saveTrackRating(fd);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1200);
+    fd.set("rating", snapshot.rating);
+    fd.set("replay_value", snapshot.replay);
+    fd.set("notes", snapshot.notes);
+    return fd;
+  }
+
+  function enqueueSave(
+    snapshot: RatingSnapshot,
+    options: { offerUndo: boolean },
+  ) {
+    const previous = latestTargetRef.current;
+    if (snapshotsMatch(snapshot, previous)) return;
+
+    onSaveStart();
+    latestTargetRef.current = snapshot;
+    const requestId = ++requestIdRef.current;
+    setPendingSaves((count) => count + 1);
+
+    saveQueueRef.current = saveQueueRef.current.then(async () => {
+      try {
+        const result = await saveTrackRating(formDataFor(snapshot));
+        if (!mountedRef.current) return;
+
+        if (!result.ok) {
+          if (requestId !== requestIdRef.current) return;
+          const confirmed = confirmedSnapshotRef.current;
+          latestTargetRef.current = confirmed;
+          applySnapshot(confirmed);
+          onNotice({ kind: "error", trackName: track.name, message: result.error });
+          return;
+        }
+
+        confirmedSnapshotRef.current = snapshot;
+        if (requestId !== requestIdRef.current) return;
+
+        if (options.offerUndo) {
+          onNotice({
+            kind: "saved",
+            trackName: track.name,
+            undo: () => {
+              applySnapshot(previous);
+              enqueueSave(previous, { offerUndo: false });
+            },
+          });
+        } else {
+          onNotice({ kind: "undone", trackName: track.name });
+        }
+      } catch {
+        if (!mountedRef.current || requestId !== requestIdRef.current) return;
+        const confirmed = confirmedSnapshotRef.current;
+        latestTargetRef.current = confirmed;
+        applySnapshot(confirmed);
+        onNotice({
+          kind: "error",
+          trackName: track.name,
+          message: "Your change was not saved. Try again.",
+        });
+      } finally {
+        if (mountedRef.current) setPendingSaves((count) => Math.max(0, count - 1));
+      }
+    });
+  }
+
+  function persist(over: Partial<{ rating: string; replay: string; notes: string }>) {
+    enqueueSave({
+      rating: over.rating ?? rating,
+      replay: (over.replay ?? replay) as ReplayValue | "",
+      notes: over.notes ?? notes,
+    }, {
+      offerUndo: true,
     });
   }
 
@@ -157,13 +350,8 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
           </button>
         )}
 
-        <span
-          className={cn(
-            "ml-auto text-xs whitespace-nowrap text-sage transition-opacity",
-            saved ? "opacity-100" : "opacity-0",
-          )}
-        >
-          ✓ saved
+        <span aria-live="polite" className="ml-auto text-xs whitespace-nowrap text-muted">
+          {pendingSaves > 0 ? "saving…" : ""}
         </span>
       </div>
 

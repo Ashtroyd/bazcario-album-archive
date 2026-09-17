@@ -188,6 +188,34 @@ body {
   }
 }
 
+@keyframes rating-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rating-toast-timer {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.rating-save-toast {
+  animation: rating-toast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rating-save-toast-timer {
+  animation: rating-toast-timer 6s linear both;
+}
+
 .animate-context-in {
   animation: context-in 0.36s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -227,6 +255,11 @@ body {
   .animate-tour-in,
   .month-saving-status,
   .animate-context-in {
+    animation: none;
+  }
+
+  .rating-save-toast,
+  .rating-save-toast-timer {
     animation: none;
   }
 
