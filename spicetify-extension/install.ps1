@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $ExtensionName = "album-archive.js"
-$ReleaseTag = "spicetify-v0.2.0-beta.1"
+$ReleaseTag = "spicetify-v0.2.0-beta.2"
 $DefaultUrl = "https://github.com/Ashtroyd/bazcario-album-archive/releases/download/$ReleaseTag/$ExtensionName"
 $ExtensionUrl = if ($env:ALBUM_ARCHIVE_EXTENSION_URL) { $env:ALBUM_ARCHIVE_EXTENSION_URL } else { $DefaultUrl }
 
