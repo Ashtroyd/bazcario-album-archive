@@ -68,21 +68,52 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
 
   return (
     <div className="rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition sm:p-4">
-      {/* Track + big score */}
+      {/* Track title */}
       <div className="flex items-center gap-3">
         <span className="w-5 shrink-0 text-right text-xs text-muted">
           {track.order}
         </span>
         <span className="min-w-0 flex-1 truncate font-medium text-ink">{track.name}</span>
-        <span
-          className={cn(
-            "w-14 shrink-0 text-right text-2xl font-bold tabular-nums",
-            scoreColor(num),
-          )}
-        >
-          {num != null ? formatScore(num) : "–"}
-        </span>
       </div>
+
+      {/* Make score ownership visible without relying on avatar recognition or hover. */}
+      <dl
+        aria-label={`Ratings for ${track.name}`}
+        className="mt-3 flex flex-wrap gap-2 pl-8"
+      >
+        <div className="flex min-w-32 flex-1 items-center justify-between gap-3 rounded-lg bg-ink px-3 py-2 text-paper shadow-[0_3px_10px_rgba(38,37,33,0.12)] sm:flex-none">
+          <dt className="text-xs font-medium">You</dt>
+          <dd className="text-sm font-semibold tabular-nums">
+            {num != null ? formatScore(num) : "Not rated"}
+          </dd>
+        </div>
+
+        {track.friends.map((friend, index) => {
+          const name = friend.name?.trim() || "Friend";
+
+          return (
+            <div
+              key={`${name}-${friend.avatar ?? index}-${index}`}
+              className="flex min-w-36 flex-1 items-center gap-2 rounded-lg border border-line bg-ivory px-2.5 py-2 transition-colors hover:border-line-strong sm:flex-none"
+            >
+              <span aria-hidden="true" className="shrink-0">
+                <Avatar url={friend.avatar} name={name} size={22} />
+              </span>
+              <dt className="min-w-0 flex-1 truncate text-xs font-medium text-ink">
+                {name}
+              </dt>
+              <dd
+                className={cn(
+                  "text-sm font-semibold tabular-nums",
+                  scoreColor(friend.score),
+                )}
+              >
+                {formatScore(friend.score)}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
 
       {/* Quick-set slider */}
       <input
@@ -109,7 +140,7 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
           onChange={(e) => setRating(e.target.value)}
           onBlur={() => persist({})}
           placeholder="–"
-          aria-label="Exact rating"
+          aria-label={`Exact rating for ${track.name}`}
           className="w-16 rounded-md border border-line bg-paper px-2 py-1 text-center text-sm text-ink outline-none transition-colors focus:border-line-strong"
         />
 
@@ -175,32 +206,6 @@ function TrackRow({ albumId, track }: { albumId: string; track: Row }) {
         placeholder="Add a note…"
         className="mt-2 w-full rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink outline-none transition-colors focus:border-line-strong"
       />
-
-      {/* Friends' scores for this track */}
-      {track.friends.length > 0 && (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-[10px] tracking-wide text-muted uppercase">
-            Friends
-          </span>
-          {track.friends.map((f, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center gap-1 rounded-full border border-line bg-ivory px-1.5 py-0.5"
-              title={f.name ?? "Friend"}
-            >
-              <Avatar url={f.avatar} name={f.name} size={16} />
-              <span
-                className={cn(
-                  "text-xs font-semibold tabular-nums",
-                  scoreColor(f.score),
-                )}
-              >
-                {formatScore(f.score)}
-              </span>
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
