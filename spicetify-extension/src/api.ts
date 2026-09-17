@@ -2,6 +2,11 @@ import type { ExtensionConfig } from "./storage";
 
 export type ReplayValue = "Low" | "Medium" | "High" | "Very High";
 
+export type ExtensionAccount = {
+  displayName: string;
+  avatarUrl: string | null;
+};
+
 export type ReadyTrack = {
   status: "ready";
   album: {
@@ -81,6 +86,10 @@ export function getCurrent(
 ): Promise<CurrentResponse> {
   const params = new URLSearchParams({ spotifyAlbumId, spotifyTrackId });
   return archiveRequest(config, `/api/extension/current?${params}`);
+}
+
+export function getAccount(config: ExtensionConfig): Promise<ExtensionAccount> {
+  return archiveRequest(config, "/api/extension/account");
 }
 
 export function importAlbum(

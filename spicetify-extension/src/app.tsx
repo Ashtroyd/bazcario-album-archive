@@ -1,11 +1,13 @@
 import {
   ArchiveApiError,
+  getAccount,
   getCurrent,
   getSongRating,
   importAlbum,
   saveRating,
   saveSongRating,
   type CurrentResponse,
+  type ExtensionAccount,
   type ReadyTrack,
   type ReplayValue,
   type SongRatingResponse,
@@ -19,7 +21,7 @@ import {
   type ExtensionConfig,
 } from "./storage";
 import { PANEL_STYLES } from "./styles";
-import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
+import type { ChangeEvent, FormEvent, KeyboardEvent, PointerEvent } from "react";
 
 let React: typeof import("react");
 const REPLAY_VALUES: ReplayValue[] = ["Low", "Medium", "High", "Very High"];
@@ -36,12 +38,13 @@ function friendlyError(error: unknown): string {
   return "Album Archive could not complete that request.";
 }
 
-function ConnectionForm({ onConnect }: { onConnect: (config: ExtensionConfig) => void }) {
+function ConnectionForm({ onConnect }: { onConnect: (config: ExtensionConfig) => Promise<void> }) {
   const [siteUrl, setSiteUrl] = React.useState(DEFAULT_SITE_URL);
   const [token, setToken] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [connecting, setConnecting] = React.useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
       const normalizedUrl = new URL(siteUrl.trim());
@@ -50,9 +53,17 @@ function ConnectionForm({ onConnect }: { onConnect: (config: ExtensionConfig) =>
         throw new Error("invalid URL");
       }
       if (!token.trim().startsWith("baa_ext_")) throw new Error("invalid token");
-      onConnect({ siteUrl: normalizedUrl.origin, token: token.trim() });
-    } catch {
-      setError("Enter the Album Archive URL and a connection token from your profile.");
+      setConnecting(true);
+      setError(null);
+      await onConnect({ siteUrl: normalizedUrl.origin, token: token.trim() });
+    } catch (caught) {
+      if (caught instanceof ArchiveApiError || caught instanceof TypeError) {
+        setError(friendlyError(caught));
+      } else {
+        setError("Enter the Album Archive URL and a connection token from your profile.");
+      }
+    } finally {
+      setConnecting(false);
     }
   }
 
@@ -87,7 +98,9 @@ function ConnectionForm({ onConnect }: { onConnect: (config: ExtensionConfig) =>
         </label>
         {error && <div className="baa-error">{error}</div>}
         <div className="baa-actions">
-          <button className="baa-button" type="submit">Connect</button>
+          <button className="baa-button" type="submit" disabled={connecting}>
+            {connecting ? "Checking…" : "Connect"}
+          </button>
           <a className="baa-link" href={`${siteUrl.replace(/\/$/, "")}/profile`} target="_blank" rel="noreferrer">
             Open profile
           </a>
@@ -97,9 +110,50 @@ function ConnectionForm({ onConnect }: { onConnect: (config: ExtensionConfig) =>
   );
 }
 
-function EmptyState({ title, body }: { title: string; body: string }) {
+function accountInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "A";
+  return words.slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+}
+
+function AccountCue({
+  account,
+  onChange,
+}: {
+  account: ExtensionAccount;
+  onChange: () => void;
+}) {
+  return (
+    <div className="baa-account" aria-label={`Ratings save to ${account.displayName}`}>
+      <div className="baa-account-avatar" aria-hidden="true">
+        <span>{accountInitials(account.displayName)}</span>
+        {account.avatarUrl && <img src={account.avatarUrl} alt="" />}
+      </div>
+      <div className="baa-account-copy">
+        <span>Saving to</span>
+        <strong title={account.displayName}>{account.displayName}</strong>
+      </div>
+      <button type="button" onClick={onChange} aria-label={`Change from ${account.displayName}`}>
+        Change
+      </button>
+    </div>
+  );
+}
+
+function EmptyState({
+  title,
+  body,
+  account,
+  onChangeAccount,
+}: {
+  title: string;
+  body: string;
+  account?: ExtensionAccount | null;
+  onChangeAccount?: () => void;
+}) {
   return (
     <div className="baa-panel">
+      {account && onChangeAccount && <AccountCue account={account} onChange={onChangeAccount} />}
       <div className="baa-empty">
         <div className="baa-empty-mark">♪</div>
         <div className="baa-kicker">Album Archive</div>
@@ -135,6 +189,7 @@ function RatingPanel({
   config,
   onSaved,
   onDisconnect,
+  account,
   mode,
   onModeChange,
 }: {
@@ -143,6 +198,7 @@ function RatingPanel({
   config: ExtensionConfig;
   onSaved: (next: ReadyTrack) => void;
   onDisconnect: () => void;
+  account: ExtensionAccount;
   mode: "song" | "album";
   onModeChange: (mode: "song" | "album") => void;
 }) {
@@ -187,6 +243,7 @@ function RatingPanel({
   const score = rating === "" ? 0 : Math.max(0, Math.min(10, Number(rating) || 0));
   return (
     <div className="baa-panel">
+      <AccountCue account={account} onChange={onDisconnect} />
       <ModeSwitch mode={mode} onChange={onModeChange} />
       <div style={{ display: "flex", alignItems: "start", gap: "8px" }}>
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -194,7 +251,6 @@ function RatingPanel({
           <h2 className="baa-title">{data.album.title}</h2>
           <p className="baa-subtitle">{data.album.artist}</p>
         </div>
-        <button className="baa-settings" type="button" onClick={onDisconnect} title="Connection settings" aria-label="Connection settings">•••</button>
       </div>
 
       {playing.imageUrl && <img className="baa-cover" src={playing.imageUrl} alt="" />}
@@ -233,7 +289,7 @@ function RatingPanel({
         value={score}
         aria-label={`Rating for ${data.track.name}`}
         onChange={(event: ChangeEvent<HTMLInputElement>) => setRating(event.target.value)}
-        onPointerUp={(event) => void persist({ rating: event.currentTarget.value })}
+        onPointerUp={(event: PointerEvent<HTMLInputElement>) => void persist({ rating: event.currentTarget.value })}
         onKeyUp={(event: KeyboardEvent<HTMLInputElement>) => {
           if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
             void persist({ rating: event.currentTarget.value });
@@ -283,6 +339,7 @@ function SingleSongPanel({
   config,
   onSaved,
   onDisconnect,
+  account,
   mode,
   onModeChange,
 }: {
@@ -291,6 +348,7 @@ function SingleSongPanel({
   config: ExtensionConfig;
   onSaved: (next: SongRatingResponse) => void;
   onDisconnect: () => void;
+  account: ExtensionAccount;
   mode: "song" | "album";
   onModeChange: (mode: "song" | "album") => void;
 }) {
@@ -340,6 +398,7 @@ function SingleSongPanel({
   const score = rating === "" ? 0 : Math.max(0, Math.min(10, Number(rating) || 0));
   return (
     <div className="baa-panel">
+      <AccountCue account={account} onChange={onDisconnect} />
       <ModeSwitch mode={mode} onChange={onModeChange} />
       <div style={{ display: "flex", alignItems: "start", gap: "8px" }}>
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -347,7 +406,6 @@ function SingleSongPanel({
           <h2 className="baa-title">{saved?.title ?? playing.trackName}</h2>
           <p className="baa-subtitle">{saved?.artist ?? playing.artistName}</p>
         </div>
-        <button className="baa-settings" type="button" onClick={onDisconnect} title="Connection settings" aria-label="Connection settings">•••</button>
       </div>
 
       {playing.imageUrl && <img className="baa-cover" src={playing.imageUrl} alt="" />}
@@ -380,7 +438,7 @@ function SingleSongPanel({
         value={score}
         aria-label={`Standalone rating for ${playing.trackName}`}
         onChange={(event: ChangeEvent<HTMLInputElement>) => setRating(event.target.value)}
-        onPointerUp={(event) => void persist({ rating: event.currentTarget.value })}
+        onPointerUp={(event: PointerEvent<HTMLInputElement>) => void persist({ rating: event.currentTarget.value })}
         onKeyUp={(event: KeyboardEvent<HTMLInputElement>) => {
           if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
             void persist({ rating: event.currentTarget.value });
@@ -422,6 +480,7 @@ function SingleSongPanel({
 
 function ArchivePanel() {
   const [config, setConfig] = React.useState<ExtensionConfig | null>(() => loadConfig());
+  const [account, setAccount] = React.useState<ExtensionAccount | null>(null);
   const [showSettings, setShowSettings] = React.useState(false);
   const [playing, setPlaying] = React.useState<PlayingTrack | null>(() => readPlayingTrack());
   const [current, setCurrent] = React.useState<CurrentResponse | null>(null);
@@ -430,6 +489,8 @@ function ArchivePanel() {
   const [loading, setLoading] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [accountError, setAccountError] = React.useState<string | null>(null);
+  const [accountAttempt, setAccountAttempt] = React.useState(0);
   const requestVersionRef = React.useRef(0);
 
   async function load(track: PlayingTrack, activeConfig: ExtensionConfig) {
@@ -461,13 +522,35 @@ function ArchivePanel() {
   }, []);
 
   React.useEffect(() => {
+    if (!config || account) return;
+    let active = true;
+    void getAccount(config)
+      .then((next) => {
+        if (active) {
+          setAccount(next);
+          setAccountError(null);
+        }
+      })
+      .catch((caught) => {
+        if (active) setAccountError(friendlyError(caught));
+      });
+    return () => {
+      active = false;
+    };
+  }, [config, account, accountAttempt]);
+
+  React.useEffect(() => {
     setCurrent(null);
     setSongCurrent(null);
     if (playing && config) void load(playing, config);
   }, [playing, config]);
 
-  function connect(next: ExtensionConfig) {
+  async function connect(next: ExtensionConfig) {
+    const nextAccount = await getAccount(next);
     saveConfig(next);
+    setAccount(nextAccount);
+    setAccountError(null);
+    setAccountAttempt(0);
     setConfig(next);
     setShowSettings(false);
   }
@@ -475,6 +558,8 @@ function ArchivePanel() {
   function disconnect() {
     clearConfig();
     setConfig(null);
+    setAccount(null);
+    setAccountError(null);
     setCurrent(null);
     setSongCurrent(null);
     setShowSettings(true);
@@ -496,11 +581,27 @@ function ArchivePanel() {
   }
 
   if (!config || showSettings) return <ConnectionForm onConnect={connect} />;
-  if (!playing) return <EmptyState title="Play an album" body="The current track will appear here when Spotify starts playing an album." />;
-  if (loading && !current) return <EmptyState title="Finding this track" body={`${playing.trackName} · ${playing.artistName}`} />;
+  if (accountError && !account) {
+    return (
+      <div className="baa-panel">
+        <div className="baa-empty">
+          <div className="baa-empty-mark">!</div>
+          <h2 className="baa-title">Account check failed</h2>
+          <p>{accountError}</p>
+          <div className="baa-actions" style={{ justifyContent: "center" }}>
+            <button className="baa-button" type="button" onClick={() => { setAccountError(null); setAccountAttempt((value) => value + 1); }}>Try again</button>
+            <button className="baa-button baa-button-secondary" type="button" onClick={disconnect}>Reconnect</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (!playing) return <EmptyState title="Play an album" body="The current track will appear here when Spotify starts playing an album." account={account} onChangeAccount={() => setShowSettings(true)} />;
+  if (loading && !current) return <EmptyState title="Finding this track" body={`${playing.trackName} · ${playing.artistName}`} account={account} onChangeAccount={() => setShowSettings(true)} />;
   if (error && !current) {
     return (
       <div className="baa-panel">
+        {account && <AccountCue account={account} onChange={() => setShowSettings(true)} />}
         <div className="baa-empty">
           <div className="baa-empty-mark">!</div>
           <h2 className="baa-title">Connection interrupted</h2>
@@ -514,6 +615,7 @@ function ArchivePanel() {
     );
   }
   if (mode === "song" && songCurrent) {
+    if (!account) return <EmptyState title="Confirming your account" body="Checking where your ratings will be saved…" />;
     return (
       <SingleSongPanel
         key={playing.spotifyTrackId}
@@ -522,14 +624,17 @@ function ArchivePanel() {
         config={config}
         onSaved={setSongCurrent}
         onDisconnect={() => setShowSettings(true)}
+        account={account}
         mode={mode}
         onModeChange={setMode}
       />
     );
   }
   if (current?.status === "album_missing" || current?.status === "track_missing") {
+    if (!account) return <EmptyState title="Confirming your account" body="Checking where your ratings will be saved…" />;
     return (
       <div className="baa-panel">
+        <AccountCue account={account} onChange={() => setShowSettings(true)} />
         <ModeSwitch mode={mode} onChange={setMode} />
         {playing.imageUrl && <img className="baa-cover" src={playing.imageUrl} alt="" />}
         <div className="baa-kicker">Not linked yet</div>
@@ -543,12 +648,12 @@ function ArchivePanel() {
           <button className="baa-button" type="button" disabled={importing} onClick={() => void addAlbum()}>
             {importing ? "Adding…" : "Add to Archive"}
           </button>
-          <button className="baa-settings" type="button" onClick={disconnect}>Connection</button>
         </div>
       </div>
     );
   }
   if (current?.status === "ready") {
+    if (!account) return <EmptyState title="Confirming your account" body="Checking where your ratings will be saved…" />;
     return (
       <RatingPanel
         key={current.track.id}
@@ -557,6 +662,7 @@ function ArchivePanel() {
         config={config}
         onSaved={setCurrent}
         onDisconnect={() => setShowSettings(true)}
+        account={account}
         mode={mode}
         onModeChange={setMode}
       />

@@ -26,6 +26,9 @@
     const params = new URLSearchParams({ spotifyAlbumId, spotifyTrackId });
     return archiveRequest(config, `/api/extension/current?${params}`);
   }
+  function getAccount(config) {
+    return archiveRequest(config, "/api/extension/account");
+  }
   function importAlbum(config, spotifyAlbumId) {
     return archiveRequest(config, "/api/extension/import", {
       method: "POST",
@@ -190,6 +193,57 @@
   text-overflow: ellipsis;
 }
 .baa-panel * { box-sizing: border-box; }
+.baa-account {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 9px 10px 9px 12px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--baa-accent) 28%, var(--baa-line));
+  border-radius: 10px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--baa-accent) 11%, transparent), rgba(255,255,255,.025) 60%);
+}
+.baa-account::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--baa-accent);
+  content: "";
+}
+.baa-account-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--baa-accent) 48%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--baa-accent) 20%, #17110f);
+  color: var(--baa-accent-bright);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.baa-account-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.baa-account-copy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.baa-account-copy span { color: var(--baa-muted); font-size: 8px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.baa-account-copy strong { overflow: hidden; color: var(--baa-ink); font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.baa-account > button {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,.06);
+  color: var(--baa-muted);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.baa-account > button:hover { background: rgba(255,255,255,.11); color: var(--baa-ink); }
 .baa-kicker { color: var(--baa-muted); font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
 .baa-title { margin: 4px 0 0; font: 600 23px/1.08 Iowan Old Style, Georgia, serif; letter-spacing: -.02em; }
 .baa-subtitle { margin: 5px 0 0; color: var(--baa-muted); font-size: 12px; line-height: 1.35; }
@@ -229,7 +283,12 @@
 .baa-link:hover { color: var(--baa-ink); text-decoration: underline; }
 .baa-settings { margin-left: auto; border: 0; padding: 2px; background: transparent; color: var(--baa-muted); cursor: pointer; }
 @media (prefers-reduced-motion: no-preference) {
-  .baa-score, .baa-button, .baa-replay button { transition: border-color .15s, background-color .15s, color .15s; }
+  .baa-account { animation: baa-account-in .32s cubic-bezier(.2,.75,.25,1) both; }
+  .baa-account > button, .baa-score, .baa-button, .baa-replay button { transition: border-color .15s, background-color .15s, color .15s; }
+  @keyframes baa-account-in {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 `;
 
@@ -251,7 +310,8 @@
     const [siteUrl, setSiteUrl] = React.useState(DEFAULT_SITE_URL);
     const [token, setToken] = React.useState("");
     const [error, setError] = React.useState(null);
-    function submit(event) {
+    const [connecting, setConnecting] = React.useState(false);
+    async function submit(event) {
       event.preventDefault();
       try {
         const normalizedUrl = new URL(siteUrl.trim());
@@ -260,9 +320,17 @@
           throw new Error("invalid URL");
         }
         if (!token.trim().startsWith("baa_ext_")) throw new Error("invalid token");
-        onConnect({ siteUrl: normalizedUrl.origin, token: token.trim() });
-      } catch {
-        setError("Enter the Album Archive URL and a connection token from your profile.");
+        setConnecting(true);
+        setError(null);
+        await onConnect({ siteUrl: normalizedUrl.origin, token: token.trim() });
+      } catch (caught) {
+        if (caught instanceof ArchiveApiError || caught instanceof TypeError) {
+          setError(friendlyError(caught));
+        } else {
+          setError("Enter the Album Archive URL and a connection token from your profile.");
+        }
+      } finally {
+        setConnecting(false);
       }
     }
     return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty-mark" }, "A"), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "One-time setup"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, "Connect your archive"), /* @__PURE__ */ Spicetify.React.createElement("p", null, "Create a Spotify extension token from your Album Archive profile, then paste it here.")), /* @__PURE__ */ Spicetify.React.createElement("form", { onSubmit: submit }, /* @__PURE__ */ Spicetify.React.createElement("label", { className: "baa-section-label" }, "Album Archive URL", /* @__PURE__ */ Spicetify.React.createElement(
@@ -283,10 +351,26 @@
         placeholder: "baa_ext_\u2026",
         autoComplete: "off"
       }
-    )), error && /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-error" }, error), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions" }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "submit" }, "Connect"), /* @__PURE__ */ Spicetify.React.createElement("a", { className: "baa-link", href: `${siteUrl.replace(/\/$/, "")}/profile`, target: "_blank", rel: "noreferrer" }, "Open profile"))));
+    )), error && /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-error" }, error), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions" }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "submit", disabled: connecting }, connecting ? "Checking\u2026" : "Connect"), /* @__PURE__ */ Spicetify.React.createElement("a", { className: "baa-link", href: `${siteUrl.replace(/\/$/, "")}/profile`, target: "_blank", rel: "noreferrer" }, "Open profile"))));
   }
-  function EmptyState({ title, body }) {
-    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty-mark" }, "\u266A"), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Album Archive"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, title), /* @__PURE__ */ Spicetify.React.createElement("p", null, body)));
+  function accountInitials(name) {
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return "A";
+    return words.slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  }
+  function AccountCue({
+    account,
+    onChange
+  }) {
+    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-account", "aria-label": `Ratings save to ${account.displayName}` }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-account-avatar", "aria-hidden": "true" }, /* @__PURE__ */ Spicetify.React.createElement("span", null, accountInitials(account.displayName)), account.avatarUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { src: account.avatarUrl, alt: "" })), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-account-copy" }, /* @__PURE__ */ Spicetify.React.createElement("span", null, "Saving to"), /* @__PURE__ */ Spicetify.React.createElement("strong", { title: account.displayName }, account.displayName)), /* @__PURE__ */ Spicetify.React.createElement("button", { type: "button", onClick: onChange, "aria-label": `Change from ${account.displayName}` }, "Change"));
+  }
+  function EmptyState({
+    title,
+    body,
+    account,
+    onChangeAccount
+  }) {
+    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, account && onChangeAccount && /* @__PURE__ */ Spicetify.React.createElement(AccountCue, { account, onChange: onChangeAccount }), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty-mark" }, "\u266A"), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Album Archive"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, title), /* @__PURE__ */ Spicetify.React.createElement("p", null, body)));
   }
   function ModeSwitch({
     mode,
@@ -300,6 +384,7 @@
     config,
     onSaved,
     onDisconnect,
+    account,
     mode,
     onModeChange
   }) {
@@ -338,7 +423,7 @@
       void persist({ replay: next });
     }
     const score = rating === "" ? 0 : Math.max(0, Math.min(10, Number(rating) || 0));
-    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement(ModeSwitch, { mode, onChange: onModeChange }), /* @__PURE__ */ Spicetify.React.createElement("div", { style: { display: "flex", alignItems: "start", gap: "8px" } }, /* @__PURE__ */ Spicetify.React.createElement("div", { style: { minWidth: 0, flex: 1 } }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Now rating"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, data.album.title), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-subtitle" }, data.album.artist)), /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-settings", type: "button", onClick: onDisconnect, title: "Connection settings", "aria-label": "Connection settings" }, "\u2022\u2022\u2022")), playing.imageUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { className: "baa-cover", src: playing.imageUrl, alt: "" }), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-trackline" }, /* @__PURE__ */ Spicetify.React.createElement("span", { className: "baa-track-number" }, String(data.track.order).padStart(2, "0")), /* @__PURE__ */ Spicetify.React.createElement("span", { className: "baa-track-name", title: data.track.name }, data.track.name)), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-score-row" }, /* @__PURE__ */ Spicetify.React.createElement("label", { className: "baa-score-label", htmlFor: "baa-score" }, "Your score", /* @__PURE__ */ Spicetify.React.createElement("br", null), "out of ten"), /* @__PURE__ */ Spicetify.React.createElement(
+    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement(AccountCue, { account, onChange: onDisconnect }), /* @__PURE__ */ Spicetify.React.createElement(ModeSwitch, { mode, onChange: onModeChange }), /* @__PURE__ */ Spicetify.React.createElement("div", { style: { display: "flex", alignItems: "start", gap: "8px" } }, /* @__PURE__ */ Spicetify.React.createElement("div", { style: { minWidth: 0, flex: 1 } }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Now rating"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, data.album.title), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-subtitle" }, data.album.artist))), playing.imageUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { className: "baa-cover", src: playing.imageUrl, alt: "" }), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-trackline" }, /* @__PURE__ */ Spicetify.React.createElement("span", { className: "baa-track-number" }, String(data.track.order).padStart(2, "0")), /* @__PURE__ */ Spicetify.React.createElement("span", { className: "baa-track-name", title: data.track.name }, data.track.name)), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-score-row" }, /* @__PURE__ */ Spicetify.React.createElement("label", { className: "baa-score-label", htmlFor: "baa-score" }, "Your score", /* @__PURE__ */ Spicetify.React.createElement("br", null), "out of ten"), /* @__PURE__ */ Spicetify.React.createElement(
       "input",
       {
         id: "baa-score",
@@ -393,6 +478,7 @@
     config,
     onSaved,
     onDisconnect,
+    account,
     mode,
     onModeChange
   }) {
@@ -436,7 +522,7 @@
       void persist({ replay: next });
     }
     const score = rating === "" ? 0 : Math.max(0, Math.min(10, Number(rating) || 0));
-    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement(ModeSwitch, { mode, onChange: onModeChange }), /* @__PURE__ */ Spicetify.React.createElement("div", { style: { display: "flex", alignItems: "start", gap: "8px" } }, /* @__PURE__ */ Spicetify.React.createElement("div", { style: { minWidth: 0, flex: 1 } }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Standalone song"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, saved?.title ?? playing.trackName), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-subtitle" }, saved?.artist ?? playing.artistName)), /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-settings", type: "button", onClick: onDisconnect, title: "Connection settings", "aria-label": "Connection settings" }, "\u2022\u2022\u2022")), playing.imageUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { className: "baa-cover", src: playing.imageUrl, alt: "" }), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-song-album" }, saved?.albumTitle ?? playing.albumName), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-score-row" }, /* @__PURE__ */ Spicetify.React.createElement("label", { className: "baa-score-label", htmlFor: "baa-song-score" }, "Your score", /* @__PURE__ */ Spicetify.React.createElement("br", null), "out of ten"), /* @__PURE__ */ Spicetify.React.createElement(
+    return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement(AccountCue, { account, onChange: onDisconnect }), /* @__PURE__ */ Spicetify.React.createElement(ModeSwitch, { mode, onChange: onModeChange }), /* @__PURE__ */ Spicetify.React.createElement("div", { style: { display: "flex", alignItems: "start", gap: "8px" } }, /* @__PURE__ */ Spicetify.React.createElement("div", { style: { minWidth: 0, flex: 1 } }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Standalone song"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, saved?.title ?? playing.trackName), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-subtitle" }, saved?.artist ?? playing.artistName))), playing.imageUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { className: "baa-cover", src: playing.imageUrl, alt: "" }), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-song-album" }, saved?.albumTitle ?? playing.albumName), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-score-row" }, /* @__PURE__ */ Spicetify.React.createElement("label", { className: "baa-score-label", htmlFor: "baa-song-score" }, "Your score", /* @__PURE__ */ Spicetify.React.createElement("br", null), "out of ten"), /* @__PURE__ */ Spicetify.React.createElement(
       "input",
       {
         id: "baa-song-score",
@@ -485,6 +571,7 @@
   }
   function ArchivePanel() {
     const [config, setConfig] = React.useState(() => loadConfig());
+    const [account, setAccount] = React.useState(null);
     const [showSettings, setShowSettings] = React.useState(false);
     const [playing, setPlaying] = React.useState(() => readPlayingTrack());
     const [current, setCurrent] = React.useState(null);
@@ -493,6 +580,8 @@
     const [loading, setLoading] = React.useState(false);
     const [importing, setImporting] = React.useState(false);
     const [error, setError] = React.useState(null);
+    const [accountError, setAccountError] = React.useState(null);
+    const [accountAttempt, setAccountAttempt] = React.useState(0);
     const requestVersionRef = React.useRef(0);
     async function load(track, activeConfig) {
       requestVersionRef.current += 1;
@@ -521,18 +610,39 @@
       return () => Spicetify.Player.removeEventListener("songchange", listener);
     }, []);
     React.useEffect(() => {
+      if (!config || account) return;
+      let active = true;
+      void getAccount(config).then((next) => {
+        if (active) {
+          setAccount(next);
+          setAccountError(null);
+        }
+      }).catch((caught) => {
+        if (active) setAccountError(friendlyError(caught));
+      });
+      return () => {
+        active = false;
+      };
+    }, [config, account, accountAttempt]);
+    React.useEffect(() => {
       setCurrent(null);
       setSongCurrent(null);
       if (playing && config) void load(playing, config);
     }, [playing, config]);
-    function connect(next) {
+    async function connect(next) {
+      const nextAccount = await getAccount(next);
       saveConfig(next);
+      setAccount(nextAccount);
+      setAccountError(null);
+      setAccountAttempt(0);
       setConfig(next);
       setShowSettings(false);
     }
     function disconnect() {
       clearConfig();
       setConfig(null);
+      setAccount(null);
+      setAccountError(null);
       setCurrent(null);
       setSongCurrent(null);
       setShowSettings(true);
@@ -552,12 +662,19 @@
       }
     }
     if (!config || showSettings) return /* @__PURE__ */ Spicetify.React.createElement(ConnectionForm, { onConnect: connect });
-    if (!playing) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Play an album", body: "The current track will appear here when Spotify starts playing an album." });
-    if (loading && !current) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Finding this track", body: `${playing.trackName} \xB7 ${playing.artistName}` });
+    if (accountError && !account) {
+      return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty-mark" }, "!"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, "Account check failed"), /* @__PURE__ */ Spicetify.React.createElement("p", null, accountError), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions", style: { justifyContent: "center" } }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "button", onClick: () => {
+        setAccountError(null);
+        setAccountAttempt((value) => value + 1);
+      } }, "Try again"), /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button baa-button-secondary", type: "button", onClick: disconnect }, "Reconnect"))));
+    }
+    if (!playing) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Play an album", body: "The current track will appear here when Spotify starts playing an album.", account, onChangeAccount: () => setShowSettings(true) });
+    if (loading && !current) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Finding this track", body: `${playing.trackName} \xB7 ${playing.artistName}`, account, onChangeAccount: () => setShowSettings(true) });
     if (error && !current) {
-      return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty-mark" }, "!"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, "Connection interrupted"), /* @__PURE__ */ Spicetify.React.createElement("p", null, error), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions", style: { justifyContent: "center" } }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "button", onClick: () => void load(playing, config) }, "Try again"), /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button baa-button-secondary", type: "button", onClick: disconnect }, "Reconnect"))));
+      return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, account && /* @__PURE__ */ Spicetify.React.createElement(AccountCue, { account, onChange: () => setShowSettings(true) }), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty" }, /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-empty-mark" }, "!"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, "Connection interrupted"), /* @__PURE__ */ Spicetify.React.createElement("p", null, error), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions", style: { justifyContent: "center" } }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "button", onClick: () => void load(playing, config) }, "Try again"), /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button baa-button-secondary", type: "button", onClick: disconnect }, "Reconnect"))));
     }
     if (mode === "song" && songCurrent) {
+      if (!account) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Confirming your account", body: "Checking where your ratings will be saved\u2026" });
       return /* @__PURE__ */ Spicetify.React.createElement(
         SingleSongPanel,
         {
@@ -567,15 +684,18 @@
           config,
           onSaved: setSongCurrent,
           onDisconnect: () => setShowSettings(true),
+          account,
           mode,
           onModeChange: setMode
         }
       );
     }
     if (current?.status === "album_missing" || current?.status === "track_missing") {
-      return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement(ModeSwitch, { mode, onChange: setMode }), playing.imageUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { className: "baa-cover", src: playing.imageUrl, alt: "" }), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Not linked yet"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, playing.albumName), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-subtitle" }, playing.artistName), /* @__PURE__ */ Spicetify.React.createElement("p", { style: { marginTop: "16px", color: "var(--baa-muted)", fontSize: "12px", lineHeight: 1.5 } }, "Add this Spotify edition to rate its tracks in Album Archive. An exact existing album will be linked automatically."), error && /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-error" }, error), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions" }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "button", disabled: importing, onClick: () => void addAlbum() }, importing ? "Adding\u2026" : "Add to Archive"), /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-settings", type: "button", onClick: disconnect }, "Connection")));
+      if (!account) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Confirming your account", body: "Checking where your ratings will be saved\u2026" });
+      return /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-panel" }, /* @__PURE__ */ Spicetify.React.createElement(AccountCue, { account, onChange: () => setShowSettings(true) }), /* @__PURE__ */ Spicetify.React.createElement(ModeSwitch, { mode, onChange: setMode }), playing.imageUrl && /* @__PURE__ */ Spicetify.React.createElement("img", { className: "baa-cover", src: playing.imageUrl, alt: "" }), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-kicker" }, "Not linked yet"), /* @__PURE__ */ Spicetify.React.createElement("h2", { className: "baa-title" }, playing.albumName), /* @__PURE__ */ Spicetify.React.createElement("p", { className: "baa-subtitle" }, playing.artistName), /* @__PURE__ */ Spicetify.React.createElement("p", { style: { marginTop: "16px", color: "var(--baa-muted)", fontSize: "12px", lineHeight: 1.5 } }, "Add this Spotify edition to rate its tracks in Album Archive. An exact existing album will be linked automatically."), error && /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-error" }, error), /* @__PURE__ */ Spicetify.React.createElement("div", { className: "baa-actions" }, /* @__PURE__ */ Spicetify.React.createElement("button", { className: "baa-button", type: "button", disabled: importing, onClick: () => void addAlbum() }, importing ? "Adding\u2026" : "Add to Archive")));
     }
     if (current?.status === "ready") {
+      if (!account) return /* @__PURE__ */ Spicetify.React.createElement(EmptyState, { title: "Confirming your account", body: "Checking where your ratings will be saved\u2026" });
       return /* @__PURE__ */ Spicetify.React.createElement(
         RatingPanel,
         {
@@ -585,6 +705,7 @@
           config,
           onSaved: setCurrent,
           onDisconnect: () => setShowSettings(true),
+          account,
           mode,
           onModeChange: setMode
         }
