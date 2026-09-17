@@ -4,6 +4,10 @@ import {
   AlbumCard,
   type AlbumCardRating,
 } from "@/components/AlbumCard";
+import {
+  AlbumRatingFilters,
+  type AlbumRatingFilter,
+} from "@/components/AlbumRatingFilters";
 import { AlbumScopeTabs, type AlbumScope } from "@/components/AlbumScopeTabs";
 import { LibraryFilters } from "@/components/LibraryFilters";
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
@@ -18,6 +22,7 @@ export default async function LibraryPage({
     year?: string;
     sort?: string;
     scope?: string;
+    rating?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -79,12 +84,14 @@ export default async function LibraryPage({
   const friendRatings = (friendRatingsData ?? []) as unknown as FriendAlbumRating[];
   const friendRatingsByAlbum = new Map<string, FriendAlbumRating[]>();
   const friendScoreMap = new Map<string, number>();
+  const friendRatedAlbumIds = new Set<string>();
   for (const rating of friendRatings) {
     const albumRatings = friendRatingsByAlbum.get(rating.album_id) ?? [];
     albumRatings.push(rating);
     friendRatingsByAlbum.set(rating.album_id, albumRatings);
 
     if (rating.overall_rating != null) {
+      friendRatedAlbumIds.add(rating.album_id);
       const score = Number(rating.overall_rating);
       const current = friendScoreMap.get(rating.album_id);
       if (current == null || score > current) {
@@ -110,6 +117,20 @@ export default async function LibraryPage({
         ? albums.filter((album) => friendAlbumIds.has(album.id))
         : albums;
 
+  const ratingFilter: AlbumRatingFilter =
+    sp.rating === "mine" ||
+    sp.rating === "unrated" ||
+    sp.rating === "friends"
+      ? sp.rating
+      : "any";
+  const hasMyRating = (albumId: string) => scoreMap.get(albumId) != null;
+  const ratingFilteredAlbums = scopedAlbums.filter((album) => {
+    if (ratingFilter === "mine") return hasMyRating(album.id);
+    if (ratingFilter === "unrated") return !hasMyRating(album.id);
+    if (ratingFilter === "friends") return friendRatedAlbumIds.has(album.id);
+    return true;
+  });
+
   const genres = Array.from(
     new Set(albums.map((a) => a.genre).filter((g): g is string => !!g)),
   ).sort();
@@ -117,7 +138,7 @@ export default async function LibraryPage({
     new Set(albums.map((a) => a.release_year).filter((y): y is number => y != null)),
   ).sort((a, b) => b - a);
 
-  let list = scopedAlbums;
+  let list = ratingFilteredAlbums;
   const q = (sp.q ?? "").toLowerCase().trim();
   if (q)
     list = list.filter(
@@ -153,6 +174,28 @@ export default async function LibraryPage({
   const scopeHref = (nextScope: AlbumScope) => {
     const params = new URLSearchParams();
     if (nextScope !== "mine") params.set("scope", nextScope);
+    if (ratingFilter !== "any") params.set("rating", ratingFilter);
+    for (const key of ["q", "genre", "year", "sort"] as const) {
+      if (sp[key]) params.set(key, sp[key]!);
+    }
+    const query = params.toString();
+    return query ? `/albums?${query}` : "/albums";
+  };
+  const ratingCounts: Record<AlbumRatingFilter, number> = {
+    any: scopedAlbums.length,
+    mine: 0,
+    unrated: 0,
+    friends: 0,
+  };
+  for (const album of scopedAlbums) {
+    if (hasMyRating(album.id)) ratingCounts.mine += 1;
+    else ratingCounts.unrated += 1;
+    if (friendRatedAlbumIds.has(album.id)) ratingCounts.friends += 1;
+  }
+  const ratingHref = (nextFilter: AlbumRatingFilter) => {
+    const params = new URLSearchParams();
+    if (scope !== "mine") params.set("scope", scope);
+    if (nextFilter !== "any") params.set("rating", nextFilter);
     for (const key of ["q", "genre", "year", "sort"] as const) {
       if (sp[key]) params.set(key, sp[key]!);
     }
@@ -217,6 +260,17 @@ export default async function LibraryPage({
         <p className="max-w-2xl text-sm text-muted">{scopeCopy[scope]}</p>
       </div>
 
+      <AlbumRatingFilters
+        active={ratingFilter}
+        counts={ratingCounts}
+        hrefs={{
+          any: ratingHref("any"),
+          mine: ratingHref("mine"),
+          unrated: ratingHref("unrated"),
+          friends: ratingHref("friends"),
+        }}
+      />
+
       <LibraryFilters genres={genres} years={years} scope={scope} />
 
       {list.length === 0 ? (
@@ -261,7 +315,7 @@ export default async function LibraryPage({
         </div>
       ) : (
         <div
-          key={scope}
+          key={`${scope}-${ratingFilter}`}
           className="animate-scope-in grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
         >
           {list.map((a) => (

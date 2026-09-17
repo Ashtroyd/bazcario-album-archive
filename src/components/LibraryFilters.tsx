@@ -40,7 +40,9 @@ export function LibraryFilters({
     timer.current = setTimeout(() => set("q", value), 300);
   }
 
-  const hasFilters = ["q", "genre", "year", "sort"].some((k) => sp.get(k));
+  const hasFilters = ["q", "genre", "year", "sort", "rating"].some((k) =>
+    sp.get(k),
+  );
 
   function clearFilters() {
     router.push(scope === "mine" ? "/albums" : `/albums?scope=${scope}`);
