@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { AlbumScope } from "@/components/AlbumScopeTabs";
 
 const selectCls =
-  "rounded-xl border border-line bg-paper px-2 py-2 text-sm text-body outline-none transition-colors focus:border-line-strong";
+  "rounded-xl border border-line bg-paper px-2 py-2 text-sm text-body transition-colors focus:border-line-strong";
 
 export function LibraryFilters({
   genres,
@@ -49,16 +49,21 @@ export function LibraryFilters({
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-      <input
-        defaultValue={sp.get("q") ?? ""}
-        onChange={(e) => onSearch(e.target.value)}
-        placeholder="Search title or artist…"
-        aria-label="Search albums by title or artist"
-        name="q"
-        autoComplete="off"
-        className="input sm:max-w-xs sm:flex-1"
-      />
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="min-w-0 sm:max-w-xs sm:flex-1">
+        <label htmlFor="album-library-search" className="label">
+          Search albums
+        </label>
+        <input
+          id="album-library-search"
+          defaultValue={sp.get("q") ?? ""}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Title or artist…"
+          name="q"
+          autoComplete="off"
+          className="input"
+        />
+      </div>
       <div className="flex items-center gap-2">
         <select
           defaultValue={sp.get("genre") ?? ""}

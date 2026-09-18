@@ -6,6 +6,11 @@ import type { ReplayValue } from "@/lib/types";
 
 const REPLAY = new Set(["Low", "Medium", "High", "Very High"]);
 
+export type RatingMetaSaveState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
 /**
  * Upsert (or clear) the current user's rating for a single track. Clearing the
  * rating (empty value) deletes the row. The DB trigger recomputes the album's
@@ -57,15 +62,22 @@ export async function saveTrackRating(formData: FormData) {
 }
 
 /** Upsert album-level rating metadata (first listen, favorites, notes). */
-export async function saveRatingMeta(formData: FormData) {
+export async function saveRatingMeta(
+  _previousState: RatingMetaSaveState,
+  formData: FormData,
+): Promise<RatingMetaSaveState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) {
+    return { status: "error", message: "Sign in again to save album details." };
+  }
 
   const album_id = String(formData.get("album_id") || "");
-  if (!album_id) return;
+  if (!album_id) {
+    return { status: "error", message: "This album could not be saved." };
+  }
 
   const first_listen_date =
     String(formData.get("first_listen_date") || "").trim() || null;
@@ -75,7 +87,7 @@ export async function saveRatingMeta(formData: FormData) {
     String(formData.get("least_favorite_track_id") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
 
-  await supabase.from("ratings").upsert(
+  const { error } = await supabase.from("ratings").upsert(
     {
       album_id,
       user_id: user.id,
@@ -86,5 +98,10 @@ export async function saveRatingMeta(formData: FormData) {
     },
     { onConflict: "album_id,user_id" },
   );
+  if (error) {
+    return { status: "error", message: "Album details were not saved. Try again." };
+  }
+
   revalidatePath(`/album/${album_id}`);
+  return { status: "success", message: "Album details saved." };
 }

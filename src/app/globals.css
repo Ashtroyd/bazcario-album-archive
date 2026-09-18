@@ -112,7 +112,7 @@ body {
     @apply text-accent hover:bg-accent-soft;
   }
   .input {
-    @apply w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-muted outline-none transition-colors focus:border-line-strong;
+    @apply w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-muted transition-colors focus:border-line-strong;
   }
   .label {
     @apply mb-1 block text-xs font-medium tracking-wide text-muted uppercase;

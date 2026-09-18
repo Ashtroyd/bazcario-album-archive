@@ -446,6 +446,7 @@ export function SongRatingsManager({ ratings }: { ratings: SongWithMyRating[] })
 
       {notice ? (
         <div
+          role="status"
           aria-live="polite"
           aria-atomic="true"
           className="rating-save-toast fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 z-50 overflow-hidden rounded-xl border border-white/10 bg-ink text-paper shadow-[0_18px_55px_rgba(38,37,33,0.3)] sm:right-6 sm:bottom-6 sm:left-auto sm:w-96"

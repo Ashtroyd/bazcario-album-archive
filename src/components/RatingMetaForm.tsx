@@ -1,5 +1,13 @@
-import { saveRatingMeta } from "@/app/actions/ratings";
+"use client";
+
+import { useActionState } from "react";
+import {
+  saveRatingMeta,
+  type RatingMetaSaveState,
+} from "@/app/actions/ratings";
 import type { Rating, Track } from "@/lib/types";
+
+const INITIAL_STATE: RatingMetaSaveState = { status: "idle", message: "" };
 
 export function RatingMetaForm({
   albumId,
@@ -10,8 +18,13 @@ export function RatingMetaForm({
   tracks: Track[];
   rating: Rating | null;
 }) {
+  const [state, formAction, pending] = useActionState(
+    saveRatingMeta,
+    INITIAL_STATE,
+  );
+
   return (
-    <form action={saveRatingMeta} className="card space-y-3">
+    <form action={formAction} className="card space-y-3">
       <input type="hidden" name="album_id" value={albumId} />
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -81,9 +94,19 @@ export function RatingMetaForm({
         />
       </div>
 
-      <button type="submit" className="btn btn-primary">
-        Save details
-      </button>
+      <div className="flex min-h-10 flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending} className="btn btn-primary">
+          {pending ? "Saving…" : "Save details"}
+        </button>
+        <p
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className={`text-xs ${state.status === "error" ? "text-accent" : "text-body"}`}
+        >
+          {pending ? "Saving album details…" : state.message}
+        </p>
+      </div>
     </form>
   );
 }
