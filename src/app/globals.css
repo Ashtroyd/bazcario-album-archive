@@ -216,6 +216,10 @@ body {
   animation: rating-toast-timer 6s linear both;
 }
 
+.song-remove-confirm {
+  animation: context-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .animate-context-in {
   animation: context-in 0.36s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -259,7 +263,8 @@ body {
   }
 
   .rating-save-toast,
-  .rating-save-toast-timer {
+  .rating-save-toast-timer,
+  .song-remove-confirm {
     animation: none;
   }
 

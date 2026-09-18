@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteSongRating, saveSongRating } from "@/app/actions/songs";
+import {
+  deleteSongRating,
+  restoreSongRating,
+  saveSongRating,
+} from "@/app/actions/songs";
 import { CoverImage } from "@/components/CoverImage";
 import { IconTrash } from "@/components/icons";
 import type { ReplayValue, SongWithMyRating } from "@/lib/types";
@@ -31,6 +35,16 @@ type EditableSong = {
   replayValue: ReplayValue | null;
   notes: string | null;
 };
+
+type RemovedSong = {
+  song: EditableSong;
+  index: number;
+};
+
+type RemovalNotice =
+  | { kind: "removed"; removed: RemovedSong }
+  | { kind: "restored"; title: string }
+  | { kind: "error"; message: string };
 
 const REPLAY_VALUES: ReplayValue[] = ["Low", "Medium", "High", "Very High"];
 
@@ -68,16 +82,19 @@ function SongRatingEditor({
   song,
   isNew = false,
   onCancel,
+  onRemove,
 }: {
   song: EditableSong;
   isNew?: boolean;
   onCancel?: () => void;
+  onRemove?: (song: EditableSong) => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const router = useRouter();
   const [rating, setRating] = useState(song.rating == null ? "" : String(song.rating));
   const [replayValue, setReplayValue] = useState<ReplayValue | null>(song.replayValue);
   const [notes, setNotes] = useState(song.notes ?? "");
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function save() {
@@ -105,16 +122,15 @@ function SongRatingEditor({
   }
 
   function remove() {
-    const songId = song.songId;
-    if (!songId) return;
+    if (!song.songId || !onRemove) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteSongRating(songId);
+      const result = await onRemove(song);
       if (!result.ok) {
         setMessage(result.error);
         return;
       }
-      router.refresh();
+      setConfirmingRemove(false);
     });
   }
 
@@ -190,10 +206,34 @@ function SongRatingEditor({
             <button type="button" onClick={onCancel} disabled={pending} className="btn btn-ghost px-3 py-1.5">
               Cancel
             </button>
+          ) : confirmingRemove ? (
+            <div
+              role="group"
+              aria-label={`Confirm removal of ${song.title}`}
+              className="song-remove-confirm flex flex-wrap items-center gap-1.5 rounded-lg border border-accent/25 bg-accent-soft px-2 py-1"
+            >
+              <span className="px-1 text-xs font-medium text-ink">Remove this rating?</span>
+              <button
+                type="button"
+                onClick={() => setConfirmingRemove(false)}
+                disabled={pending}
+                className="rounded-md px-2 py-1 text-xs font-medium text-body transition hover:bg-surface"
+              >
+                Keep
+              </button>
+              <button
+                type="button"
+                onClick={remove}
+                disabled={pending}
+                className="rounded-md bg-accent px-2.5 py-1 text-xs font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
+              >
+                {pending ? "Removing…" : "Remove"}
+              </button>
+            </div>
           ) : (
             <button
               type="button"
-              onClick={remove}
+              onClick={() => setConfirmingRemove(true)}
               disabled={pending}
               aria-label={`Remove rating for ${song.title}`}
               className="rounded-lg p-2 text-muted transition hover:bg-accent-soft hover:text-accent"
@@ -231,18 +271,78 @@ function SongRatingEditor({
 }
 
 export function SongRatingsManager({ ratings }: { ratings: SongWithMyRating[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SpotifySong[]>([]);
   const [draft, setDraft] = useState<EditableSong | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [hiddenSongIds, setHiddenSongIds] = useState<Set<string>>(() => new Set());
+  const [restoredSongs, setRestoredSongs] = useState<RemovedSong[]>([]);
+  const [notice, setNotice] = useState<RemovalNotice | null>(null);
+  const [restoring, setRestoring] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     abortRef.current?.abort();
   }, []);
+
+  function showNotice(next: RemovalNotice, duration = 6000) {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    setNotice(next);
+    noticeTimerRef.current = setTimeout(() => {
+      setNotice(null);
+      router.refresh();
+    }, duration);
+  }
+
+  async function removeSong(song: EditableSong) {
+    if (!song.songId) return { ok: false as const, error: "This song could not be removed." };
+
+    const index = visibleSongs.findIndex((item) => item.songId === song.songId);
+    const result = await deleteSongRating(song.songId);
+    if (!result.ok) return result;
+
+    setHiddenSongIds((current) => new Set(current).add(song.songId!));
+    showNotice({ kind: "removed", removed: { song, index: Math.max(index, 0) } });
+    return { ok: true as const };
+  }
+
+  async function undoRemoval(removed: RemovedSong) {
+    const songId = removed.song.songId;
+    if (!songId || restoring) return;
+
+    setRestoring(true);
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    const result = await restoreSongRating({
+      songId,
+      rating: removed.song.rating!,
+      replayValue: removed.song.replayValue,
+      notes: removed.song.notes,
+    });
+    setRestoring(false);
+
+    if (!result.ok) {
+      showNotice({ kind: "error", message: result.error }, 7000);
+      return;
+    }
+
+    setHiddenSongIds((current) => {
+      const next = new Set(current);
+      next.delete(songId);
+      return next;
+    });
+    setRestoredSongs((current) => [
+      ...current.filter(({ song }) => song.songId !== songId),
+      removed,
+    ]);
+    showNotice({ kind: "restored", title: removed.song.title }, 4000);
+    router.refresh();
+  }
 
   function search(value: string) {
     setQuery(value);
@@ -285,6 +385,14 @@ export function SongRatingsManager({ ratings }: { ratings: SongWithMyRating[] })
     setSearchError(null);
   }
 
+  const baseSongs = ratings.map(fromRating);
+  const visibleSongs = [...baseSongs];
+  for (const restored of restoredSongs) {
+    if (restored.song.songId && visibleSongs.some((song) => song.songId === restored.song.songId)) continue;
+    visibleSongs.splice(Math.min(restored.index, visibleSongs.length), 0, restored.song);
+  }
+  const displayedSongs = visibleSongs.filter((song) => !song.songId || !hiddenSongIds.has(song.songId));
+
   return (
     <div className="space-y-5">
       <div className="relative">
@@ -324,17 +432,50 @@ export function SongRatingsManager({ ratings }: { ratings: SongWithMyRating[] })
 
       {draft ? <SongRatingEditor key={draft.spotifyTrackId} song={draft} isNew onCancel={() => setDraft(null)} /> : null}
 
-      {ratings.length === 0 && !draft ? (
+      {displayedSongs.length === 0 && !draft ? (
         <div className="card text-center text-sm text-muted">
           No standalone song ratings yet. Search above to score the first one.
         </div>
       ) : (
         <div className="space-y-3">
-          {ratings.map((item) => (
-            <SongRatingEditor key={item.id} song={fromRating(item)} />
+          {displayedSongs.map((song) => (
+            <SongRatingEditor key={song.songId} song={song} onRemove={removeSong} />
           ))}
         </div>
       )}
+
+      {notice ? (
+        <div
+          aria-live="polite"
+          aria-atomic="true"
+          className="rating-save-toast fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 z-50 overflow-hidden rounded-xl border border-white/10 bg-ink text-paper shadow-[0_18px_55px_rgba(38,37,33,0.3)] sm:right-6 sm:bottom-6 sm:left-auto sm:w-96"
+        >
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full border border-accent/55 bg-accent/15 text-accent">
+              <span className="size-2 rounded-full bg-current" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-paper/60 uppercase">
+                {notice.kind === "removed" ? "Rating removed" : notice.kind === "restored" ? "Rating restored" : "Restore interrupted"}
+              </p>
+              <p className="truncate text-sm font-medium">
+                {notice.kind === "removed" ? notice.removed.song.title : notice.kind === "restored" ? notice.title : notice.message}
+              </p>
+            </div>
+            {notice.kind === "removed" ? (
+              <button
+                type="button"
+                onClick={() => undoRemoval(notice.removed)}
+                disabled={restoring}
+                className="shrink-0 rounded-full border border-paper/25 px-3 py-1.5 text-xs font-semibold text-paper transition hover:border-paper/50 hover:bg-paper/10 disabled:opacity-60"
+              >
+                {restoring ? "Restoring…" : "Undo"}
+              </button>
+            ) : null}
+          </div>
+          {notice.kind === "removed" ? <div aria-hidden="true" className="rating-save-toast-timer h-0.5 origin-left bg-accent" /> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

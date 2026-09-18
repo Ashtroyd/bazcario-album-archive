@@ -16,6 +16,13 @@ export type SaveSongRatingInput = {
   notes: string | null;
 };
 
+export type RestoreSongRatingInput = {
+  songId: string;
+  rating: number;
+  replayValue: ReplayValue | null;
+  notes: string | null;
+};
+
 export async function saveSongRating(
   input: SaveSongRatingInput,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -104,12 +111,55 @@ export async function deleteSongRating(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sign in again to remove this rating." };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("song_ratings")
     .delete()
     .eq("song_id", songId)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .select("song_id")
+    .maybeSingle();
   if (error) return { ok: false, error: "Could not remove this rating." };
+  if (!data) return { ok: false, error: "This rating was already removed." };
+
+  revalidatePath("/songs");
+  return { ok: true };
+}
+
+/** Restore a just-deleted rating without needing another Spotify lookup. */
+export async function restoreSongRating(
+  input: RestoreSongRatingInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sign in again to restore this rating." };
+
+  const rating = Number(input.rating);
+  const notes = input.notes?.trim() || null;
+  if (!input.songId) return { ok: false, error: "This song could not be restored." };
+  if (!Number.isFinite(rating) || rating < 0 || rating > 10) {
+    return { ok: false, error: "The previous score could not be restored." };
+  }
+  if (input.replayValue !== null && !REPLAY_VALUES.has(input.replayValue)) {
+    return { ok: false, error: "The previous replay value could not be restored." };
+  }
+  if (notes && notes.length > 1000) {
+    return { ok: false, error: "The previous note could not be restored." };
+  }
+
+  const { error } = await supabase.from("song_ratings").upsert(
+    {
+      song_id: input.songId,
+      user_id: user.id,
+      rating: Math.round(rating * 100) / 100,
+      replay_value: input.replayValue,
+      notes,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "song_id,user_id" },
+  );
+  if (error) return { ok: false, error: "Could not restore this rating." };
 
   revalidatePath("/songs");
   return { ok: true };
