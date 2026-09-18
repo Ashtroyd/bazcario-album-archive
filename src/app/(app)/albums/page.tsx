@@ -11,6 +11,7 @@ import {
 import { AlbumScopeTabs, type AlbumScope } from "@/components/AlbumScopeTabs";
 import { LibraryFilters } from "@/components/LibraryFilters";
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
+import { OwnershipPrimer } from "@/components/OwnershipPrimer";
 import type { Album } from "@/lib/types";
 
 export default async function LibraryPage({
@@ -259,6 +260,8 @@ export default async function LibraryPage({
         />
         <p className="max-w-2xl text-sm text-muted">{scopeCopy[scope]}</p>
       </div>
+
+      <OwnershipPrimer userId={user!.id} />
 
       <AlbumRatingFilters
         active={ratingFilter}

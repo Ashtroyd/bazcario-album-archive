@@ -156,6 +156,32 @@ body {
   animation: scope-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes ownership-primer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ownership-primer-out {
+  to {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.995);
+  }
+}
+
+.ownership-primer {
+  animation: ownership-primer-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ownership-primer-closing {
+  animation: ownership-primer-out 0.2s ease-in both;
+}
+
 @keyframes month-status-in {
   from {
     opacity: 0;
@@ -255,6 +281,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in,
   .animate-scope-in,
+  .ownership-primer,
+  .ownership-primer-closing,
   .list-in,
   .animate-tour-in,
   .month-saving-status,
