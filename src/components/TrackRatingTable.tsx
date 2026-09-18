@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveTrackRating } from "@/app/actions/ratings";
 import { Avatar } from "@/components/Avatar";
+import { normalizeRatingInput } from "@/lib/ratingInput";
 import { REPLAY_VALUES, type ReplayValue } from "@/lib/types";
 import { cn, formatScore, scoreColor } from "@/lib/utils";
 
@@ -248,8 +249,21 @@ function TrackRow({
   }
 
   function persist(over: Partial<{ rating: string; replay: string; notes: string }>) {
+    const rawRating = over.rating ?? rating;
+    const normalizedRating = normalizeRatingInput(rawRating);
+    if (normalizedRating == null) {
+      applySnapshot(confirmedSnapshotRef.current);
+      onNotice({
+        kind: "error",
+        trackName: track.name,
+        message: "Use a score from 0 to 10.",
+      });
+      return;
+    }
+    if (normalizedRating !== rawRating) setRating(normalizedRating);
+
     enqueueSave({
-      rating: over.rating ?? rating,
+      rating: normalizedRating,
       replay: (over.replay ?? replay) as ReplayValue | "",
       notes: over.notes ?? notes,
     }, {
