@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
-import { AlbumCard } from "@/components/AlbumCard";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { Avatar } from "@/components/Avatar";
+import { DashboardAlbumRatings } from "@/components/DashboardAlbumRatings";
 import { DashboardSongRatings } from "@/components/DashboardSongRatings";
 import { MonthlyFavoritesCard } from "@/components/MonthlyFavoritesCard";
 import { getFriendActivity } from "@/lib/activity";
@@ -12,6 +13,7 @@ import {
   getFriendsMonthlyFavorites,
   getMonthlyFavorites,
   monthKey,
+  monthParam,
 } from "@/lib/monthlyFavorites";
 import type { Album } from "@/lib/types";
 
@@ -29,13 +31,13 @@ export default async function DashboardPage() {
         .select("overall_rating, updated_at, album:albums(*)")
         .eq("user_id", user!.id)
         .order("updated_at", { ascending: false })
-        .limit(8),
+        .limit(4),
       supabase
         .from("friendships")
         .select("user_id, friend_id")
         .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`)
         .eq("status", "accepted"),
-      getMySongRatings(supabase, user!.id, 4),
+      getMySongRatings(supabase, user!.id, 2),
       getMonthlyFavorites(supabase, user!.id, currentMonth),
     ]);
   const mineData = mineResult.data;
@@ -56,7 +58,7 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <div>
         <h1 className="font-serif text-2xl font-bold text-ink">
           Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
@@ -83,91 +85,101 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {myAlbums.map((r) => (
-              <AlbumCard
-                key={r.album!.id}
-                album={r.album!}
-                rating={{
-                  kind: "self",
-                  score:
-                    r.overall_rating != null ? Number(r.overall_rating) : null,
-                }}
-              />
-            ))}
-          </div>
+          <DashboardAlbumRatings
+            ratings={myAlbums.map((rating) => ({
+              album: rating.album!,
+              score:
+                rating.overall_rating == null
+                  ? null
+                  : Number(rating.overall_rating),
+            }))}
+          />
         )}
       </section>
 
-      <section className="space-y-3">
-        <div className="flex items-end justify-between gap-4">
-          <div>
+      <div className="grid gap-8 border-t border-line pt-6 lg:grid-cols-[1.05fr_0.95fr_1fr] lg:gap-0 lg:divide-x lg:divide-line">
+        <section className="space-y-3 lg:pr-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-lg font-semibold text-ink">
+                Standalone songs
+              </h2>
+              <p className="text-sm text-muted">Your latest individual scores.</p>
+            </div>
+            <Link
+              href="/songs"
+              className="shrink-0 text-sm text-accent hover:underline"
+            >
+              {mySongs.length > 0 ? "View all →" : "Rate a song →"}
+            </Link>
+          </div>
+          {mySongs.length === 0 ? (
+            <div className="card text-sm text-muted">
+              No standalone song ratings yet.{" "}
+              <Link href="/songs" className="text-accent hover:underline">
+                Rate your first song →
+              </Link>
+            </div>
+          ) : (
+            <DashboardSongRatings ratings={mySongs} />
+          )}
+        </section>
+
+        <section
+          className="space-y-3 lg:px-6"
+          data-tour="monthly-favourites"
+        >
+          <div className="flex items-center justify-between gap-3">
             <h2 className="font-serif text-lg font-semibold text-ink">
-              Standalone song ratings
+              {formatMonthLabel(currentMonth)} favourites
             </h2>
-            <p className="text-sm text-muted">
-              Individual scores that stay separate from album averages.
-            </p>
-          </div>
-          <Link
-            href="/songs"
-            className="shrink-0 text-sm text-accent hover:underline"
-          >
-            {mySongs.length > 0 ? "View all →" : "Rate a song →"}
-          </Link>
-        </div>
-        {mySongs.length === 0 ? (
-          <div className="card text-sm text-muted">
-            You haven&apos;t rated a standalone song yet.{" "}
-            <Link href="/songs" className="text-accent hover:underline">
-              Rate one without changing an album average →
+            <Link
+              href="/favourites"
+              className="shrink-0 text-sm text-accent hover:underline"
+            >
+              {myPicks.length > 0 ? "Edit →" : "Add songs →"}
             </Link>
           </div>
-        ) : (
-          <DashboardSongRatings ratings={mySongs} />
-        )}
-      </section>
+          {myPicks.length === 0 ? (
+            <div className="card text-sm text-muted">
+              You haven&apos;t picked any favourites this month yet.
+            </div>
+          ) : (
+            <div className="card overflow-hidden">
+              <MonthlyFavoritesCard picks={myPicks} />
+            </div>
+          )}
 
-      <section className="space-y-3" data-tour="monthly-favourites">
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif text-lg font-semibold text-ink">
-            {formatMonthLabel(currentMonth)} favourites
-          </h2>
-          <Link
-            href="/favourites"
-            className="text-sm text-accent hover:underline"
-          >
-            {myPicks.length > 0 ? "Edit →" : "Add songs →"}
-          </Link>
-        </div>
-        {myPicks.length === 0 ? (
-          <div className="card text-sm text-muted">
-            You haven&apos;t picked any favourite songs this month yet.{" "}
-            <Link href="/favourites" className="text-accent hover:underline">
-              Add up to 5 →
-            </Link>
-          </div>
-        ) : (
-          <div className="card">
-            <MonthlyFavoritesCard picks={myPicks} />
-          </div>
-        )}
-
-        {friendsPicks.length > 0 && (
-          <div className="space-y-3 pt-1">
-            {friendsPicks.map((f) => (
-              <div key={f.userId} className="card">
-                <div className="mb-2 text-sm font-medium text-body">
-                  {f.name ?? "A friend"}&apos;s picks
-                </div>
-                <MonthlyFavoritesCard picks={f.picks} />
+          {friendsPicks.length > 0 ? (
+            <div>
+              <p className="label">Friends this month</p>
+              <div className="flex flex-wrap gap-2">
+                {friendsPicks.map((friend) => (
+                  <Link
+                    key={friend.userId}
+                    href={`/friends/${friend.userId}/favourites/${monthParam(currentMonth)}`}
+                    className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pr-2.5 pl-1 transition-colors hover:border-line-strong hover:bg-ivory"
+                  >
+                    <Avatar
+                      url={friend.avatar}
+                      name={friend.name}
+                      size={24}
+                    />
+                    <span className="text-xs font-medium text-body">
+                      {friend.name ?? "A friend"} · {friend.picks.length}{" "}
+                      {friend.picks.length === 1 ? "pick" : "picks"}
+                    </span>
+                  </Link>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            </div>
+          ) : null}
+        </section>
 
-      <ActivityFeed items={activity} />
+        <div className="lg:pl-6">
+          <ActivityFeed items={activity} initialLimit={3} />
+        </div>
+      </div>
     </div>
   );
 }

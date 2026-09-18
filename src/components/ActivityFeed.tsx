@@ -65,8 +65,15 @@ function Verb({ item }: { item: ActivityItem }) {
   }
 }
 
-export function ActivityFeed({ items }: { items: ActivityItem[] }) {
+export function ActivityFeed({
+  items,
+  initialLimit,
+}: {
+  items: ActivityItem[];
+  initialLimit?: number;
+}) {
   const [clearedBefore, setClearedBefore] = useState(0);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     // localStorage isn't available during SSR, so the cleared-before cutoff
@@ -79,9 +86,15 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
     }
   }, []);
 
-  const visible = items.filter(
+  const available = items.filter(
     (item) => new Date(item.at).getTime() > clearedBefore,
   );
+  const visible =
+    initialLimit != null && !expanded
+      ? available.slice(0, initialLimit)
+      : available;
+  const hiddenCount =
+    initialLimit == null ? 0 : Math.max(0, available.length - initialLimit);
 
   function handleClear() {
     const now = Date.now();
@@ -97,7 +110,7 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-lg font-semibold text-ink">Activity</h2>
-        {visible.length > 0 && (
+        {available.length > 0 && (
           <button
             type="button"
             onClick={handleClear}
@@ -115,54 +128,69 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
             Add friends →
           </Link>
         </div>
-      ) : visible.length === 0 ? (
+      ) : available.length === 0 ? (
         <div className="card text-sm text-muted">You&apos;re all caught up.</div>
       ) : (
-        <ul className="space-y-2">
-          {visible.map((item, i) => (
-            <li
-              key={item.id}
-              className="list-in"
-              style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
-            >
-              <Link
-                href={linkFor(item)}
-                className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_28px_rgba(38,37,33,0.14)]"
+        <>
+          <ul className="space-y-2">
+            {visible.map((item, i) => (
+              <li
+                key={item.id}
+                className="list-in"
+                style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
               >
-                <div className="relative shrink-0">
-                  <Avatar url={item.actor.avatar} name={item.actor.name} size={38} />
-                  <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line bg-surface text-body">
-                    {ICON[item.type]({ size: 11 })}
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-body">
-                    <span className="font-medium text-ink">
-                      {item.actor.name ?? "A friend"}
-                    </span>{" "}
-                    <Verb item={item} />
-                  </p>
-                  {item.text && (
-                    <p className="truncate text-xs text-muted">
-                      &ldquo;{item.text}&rdquo;
+                <Link
+                  href={linkFor(item)}
+                  className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_28px_rgba(38,37,33,0.14)]"
+                >
+                  <div className="relative shrink-0">
+                    <Avatar
+                      url={item.actor.avatar}
+                      name={item.actor.name}
+                      size={38}
+                    />
+                    <span className="absolute -right-1 -bottom-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line bg-surface text-body">
+                      {ICON[item.type]({ size: 11 })}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-body">
+                      <span className="font-medium text-ink">
+                        {item.actor.name ?? "A friend"}
+                      </span>{" "}
+                      <Verb item={item} />
                     </p>
+                    {item.text && (
+                      <p className="truncate text-xs text-muted">
+                        &ldquo;{item.text}&rdquo;
+                      </p>
+                    )}
+                    <p className="text-[11px] text-muted">{timeAgo(item.at)}</p>
+                  </div>
+                  {item.type === "rating" && item.score != null && (
+                    <ScoreBadge score={item.score} className="shrink-0" />
                   )}
-                  <p className="text-[11px] text-muted">{timeAgo(item.at)}</p>
-                </div>
-                {item.type === "rating" && item.score != null && (
-                  <ScoreBadge score={item.score} className="shrink-0" />
-                )}
-                {item.album?.cover && (
-                  <CoverImage
-                    url={item.album.cover}
-                    alt=""
-                    className="h-11 w-11 shrink-0 rounded-md"
-                  />
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  {item.album?.cover && (
+                    <CoverImage
+                      url={item.album.cover}
+                      alt=""
+                      className="h-11 w-11 shrink-0 rounded-md"
+                    />
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {initialLimit != null && available.length > initialLimit ? (
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              className="w-full rounded-lg py-1.5 text-center text-xs font-medium text-muted transition-colors hover:bg-ivory hover:text-ink"
+            >
+              {expanded ? "Show less" : `Show ${hiddenCount} more`}
+            </button>
+          ) : null}
+        </>
       )}
     </section>
   );

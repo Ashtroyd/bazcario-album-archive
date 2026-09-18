@@ -11,7 +11,7 @@ export function DashboardSongRatings({
   ratings: SongWithMyRating[];
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-2.5">
       {ratings.map((song) => (
         <Link
           key={song.id}
