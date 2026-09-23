@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -7,19 +8,19 @@ import {
   IconHome,
   IconDisc,
   IconUsers,
-  IconMegaphone,
   IconBell,
-  IconHeadphones,
+  IconPlus,
 } from "@/components/icons";
 
 const ITEMS = [
-  { href: "/", label: "Home", Icon: IconHome, tour: undefined },
-  { href: "/albums", label: "Albums", Icon: IconDisc, tour: undefined },
-  { href: "/songs", label: "Songs", Icon: IconHeadphones, tour: undefined },
-  { href: "/friends", label: "Friends", Icon: IconUsers, tour: "friends-nav" },
-  { href: "/announcements", label: "News", Icon: IconMegaphone, tour: "announcements-nav" },
-  { href: "/notifications", label: "Alerts", Icon: IconBell, tour: "notifications-bell" },
+  { href: "/", label: "Home", Icon: IconHome, section: "home", tour: undefined, action: false },
+  { href: "/albums", label: "Library", Icon: IconDisc, section: "library", tour: undefined, action: false },
+  { href: "/album/new", label: "Add", Icon: IconPlus, section: "add", tour: "add-album", action: true },
+  { href: "/friends", label: "Friends", Icon: IconUsers, section: "friends", tour: "friends-nav", action: false },
+  { href: "/activity", label: "Activity", Icon: IconBell, section: "activity", tour: "activity-nav", action: false },
 ] as const;
+
+type Section = (typeof ITEMS)[number]["section"];
 
 type Rect = { left: number; width: number };
 
@@ -32,8 +33,23 @@ type Rect = { left: number; width: number };
 export function BottomNav({ unreadCount }: { unreadCount: number }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (section: Section) => {
+    if (section === "home") return pathname === "/";
+    if (section === "add") return pathname === "/album/new";
+    if (section === "library") {
+      return (
+        pathname.startsWith("/albums") ||
+        pathname.startsWith("/songs") ||
+        (pathname.startsWith("/album/") && pathname !== "/album/new")
+      );
+    }
+    if (section === "friends") return pathname.startsWith("/friends");
+    return (
+      pathname.startsWith("/activity") ||
+      pathname.startsWith("/announcements") ||
+      pathname.startsWith("/notifications")
+    );
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
@@ -129,8 +145,8 @@ export function BottomNav({ unreadCount }: { unreadCount: number }) {
           />
         )}
 
-        {ITEMS.map(({ href, label, Icon, tour }) => (
-          <a
+        {ITEMS.map(({ href, label, Icon, section, tour, action }) => (
+          <Link
             key={href}
             ref={(el) => {
               if (el) itemRefs.current.set(href, el);
@@ -145,19 +161,20 @@ export function BottomNav({ unreadCount }: { unreadCount: number }) {
             }}
             className={cn(
               "relative z-10 flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[10px] transition-colors",
-              (dragHref ?? (isActive(href) ? href : null)) === href
-                ? "text-accent"
-                : "text-muted",
+              action && "mx-0.5 -my-0.5 bg-accent text-white shadow-[0_5px_16px_rgba(201,100,66,0.28)]",
+              (dragHref ?? (isActive(section) ? href : null)) === href
+                ? action ? "text-white" : "text-accent"
+                : action ? "text-white" : "text-muted",
             )}
           >
             <Icon size={22} />
             {label}
-            {href === "/notifications" && unreadCount > 0 && (
+            {section === "activity" && unreadCount > 0 && (
               <span className="absolute top-0.5 right-[22%] flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-white ring-2 ring-surface">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
-          </a>
+          </Link>
         ))}
       </div>
     </nav>

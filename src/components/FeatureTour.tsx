@@ -17,9 +17,9 @@ const STEPS: TourStep[] = [
     body: "Search a title and cover art, tracklist, and release year fill in automatically. Rate each track and your overall score is calculated for you.",
   },
   {
-    target: "announcements-nav",
-    title: "Follow artists",
-    body: "Follow your favourite artists and their new releases show up here — checked every 30 minutes, no need to go looking.",
+    target: "activity-nav",
+    title: "See what’s new",
+    body: "New releases, friend requests, comments, and rating comparisons now live together in Activity.",
   },
   {
     target: "friends-nav",
@@ -30,11 +30,6 @@ const STEPS: TourStep[] = [
     target: "monthly-favourites",
     title: "Monthly favourites",
     body: "Pick up to five favourite songs each month. Yours and your friends' picks both show up here.",
-  },
-  {
-    target: "notifications-bell",
-    title: "Stay in the loop",
-    body: "Friend requests and comments on your reviews show up here.",
   },
 ];
 

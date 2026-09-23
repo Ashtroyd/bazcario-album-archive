@@ -165,6 +165,21 @@ body {
   animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@keyframes account-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-account-menu-in {
+  transform-origin: top right;
+  animation: account-menu-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .album-scope-pill {
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -313,6 +328,7 @@ body {
   .ownership-primer-closing,
   .list-in,
   .animate-tour-in,
+  .animate-account-menu-in,
   .month-saving-status,
   .animate-context-in {
     animation: none;

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
-import { signout } from "@/app/actions/auth";
 import { FavoriteTrackPicker } from "@/components/FavoriteTrackPicker";
 import { ProfileSettingsCard } from "@/components/ProfileSettingsCard";
 import { SpotifyExtensionCard } from "@/components/SpotifyExtensionCard";
@@ -147,11 +146,6 @@ export default async function ProfilePage() {
           <Link href="/favourites" className="btn btn-outline text-sm">
             Favourite songs
           </Link>
-          <form action={signout}>
-            <button type="submit" className="btn btn-outline text-sm">
-              Sign out
-            </button>
-          </form>
         </div>
       </div>
 

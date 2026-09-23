@@ -2,19 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signout } from "@/app/actions/auth";
-import { Avatar } from "@/components/Avatar";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { IconBell, IconHeadphones } from "@/components/icons";
+import { AccountMenu } from "@/components/AccountMenu";
+import { IconHeadphones } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/", label: "Dashboard" },
-  { href: "/albums", label: "Albums" },
-  { href: "/songs", label: "Songs" },
-  { href: "/friends", label: "Friends" },
-  { href: "/announcements", label: "Announcements" },
-];
+  { href: "/", label: "Home", section: "home", tour: undefined },
+  { href: "/albums", label: "Library", section: "library", tour: undefined },
+  { href: "/friends", label: "Friends", section: "friends", tour: "friends-nav" },
+  { href: "/activity", label: "Activity", section: "activity", tour: "activity-nav" },
+] as const;
+
+type Section = (typeof LINKS)[number]["section"];
+
+function sectionIsActive(section: Section, pathname: string) {
+  if (section === "home") return pathname === "/";
+  if (section === "library") {
+    return (
+      pathname.startsWith("/albums") ||
+      pathname.startsWith("/songs") ||
+      (pathname.startsWith("/album/") && pathname !== "/album/new")
+    );
+  }
+  if (section === "friends") return pathname.startsWith("/friends");
+  return (
+    pathname.startsWith("/activity") ||
+    pathname.startsWith("/announcements") ||
+    pathname.startsWith("/notifications")
+  );
+}
 
 export function AppNav({
   profile,
@@ -24,8 +40,6 @@ export function AppNav({
   unreadCount: number;
 }) {
   const pathname = usePathname();
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-paper/80 backdrop-blur">
@@ -40,26 +54,29 @@ export function AppNav({
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
-          {LINKS.map((l) => (
+        <nav aria-label="Primary" className="hidden items-center gap-1 sm:flex">
+          {LINKS.map((link) => (
             <Link
-              key={l.href}
-              href={l.href}
-              data-tour={
-                l.href === "/friends"
-                  ? "friends-nav"
-                  : l.href === "/announcements"
-                    ? "announcements-nav"
-                    : undefined
-              }
+              key={link.href}
+              href={link.href}
+              data-tour={link.tour}
+              aria-current={sectionIsActive(link.section, pathname) ? "page" : undefined}
               className={cn(
-                "rounded-full px-3 py-1.5 text-sm transition-colors",
-                isActive(l.href)
+                "relative rounded-full px-3 py-1.5 text-sm transition-colors",
+                sectionIsActive(link.section, pathname)
                   ? "bg-ivory text-ink"
                   : "text-body hover:bg-ivory hover:text-ink",
               )}
             >
-              {l.label}
+              {link.label}
+              {link.section === "activity" && unreadCount > 0 ? (
+                <span
+                  aria-label={`${unreadCount} unread`}
+                  className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-white ring-2 ring-paper"
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : null}
             </Link>
           ))}
         </nav>
@@ -71,39 +88,9 @@ export function AppNav({
             className="hidden btn btn-primary px-3 py-1.5 sm:inline-flex"
           >
             <span className="text-base leading-none">+</span>
-            <span className="hidden sm:inline">Add album</span>
+            <span>Add album</span>
           </Link>
-          <ThemeToggle />
-          <Link
-            href="/notifications"
-            title="Notifications"
-            data-tour="notifications-bell"
-            className={cn(
-              "relative hidden rounded-full px-2 py-1.5 transition-colors sm:inline-flex",
-              isActive("/notifications")
-                ? "bg-ivory text-ink"
-                : "text-body hover:bg-ivory hover:text-ink",
-            )}
-          >
-            <IconBell size={20} />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </Link>
-          <Link
-            href="/profile"
-            title="Profile"
-            className="rounded-full ring-2 ring-line-strong transition hover:ring-accent"
-          >
-            <Avatar url={profile.avatar_url} name={profile.display_name} size={34} />
-          </Link>
-          <form action={signout} className="hidden sm:block">
-            <button type="submit" className="btn btn-ghost px-3 py-1.5">
-              Sign out
-            </button>
-          </form>
+          <AccountMenu profile={profile} />
         </div>
       </div>
     </header>

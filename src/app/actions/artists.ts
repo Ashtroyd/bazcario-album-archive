@@ -32,6 +32,7 @@ export async function followArtist(formData: FormData) {
   );
 
   revalidatePath("/announcements");
+  revalidatePath("/activity");
 }
 
 export async function unfollowArtist(formData: FormData) {
@@ -47,4 +48,5 @@ export async function unfollowArtist(formData: FormData) {
   await supabase.from("followed_artists").delete().eq("id", id).eq("user_id", user.id);
 
   revalidatePath("/announcements");
+  revalidatePath("/activity");
 }

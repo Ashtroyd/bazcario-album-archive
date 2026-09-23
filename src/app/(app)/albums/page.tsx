@@ -240,12 +240,7 @@ export default async function LibraryPage({
               : `${list.length} of ${scopedAlbums.length} albums`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/album/new" className="btn btn-primary px-3 py-1.5">
-            Add album
-          </Link>
-          <LibraryModeSwitch active="albums" />
-        </div>
+        <LibraryModeSwitch active="albums" />
       </div>
 
       <div className="space-y-2">

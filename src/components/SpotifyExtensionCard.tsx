@@ -46,7 +46,7 @@ export function SpotifyExtensionCard({
   }
 
   return (
-    <section className="card space-y-4">
+    <section id="spotify-extension" className="card scroll-mt-24 space-y-4">
       <div>
         <div className="text-[10px] tracking-[0.16em] text-muted uppercase">
           Desktop listening
