@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { AlbumScope } from "@/components/AlbumScopeTabs";
 
 const selectCls =
-  "rounded-xl border border-line bg-paper px-2 py-2 text-sm text-body transition-colors focus:border-line-strong";
+  "min-h-11 min-w-0 max-w-full rounded-xl border border-line bg-paper px-2 py-2 text-sm text-body transition-colors focus:border-line-strong";
 
 export function LibraryFilters({
   genres,
@@ -64,11 +64,11 @@ export function LibraryFilters({
           className="input"
         />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:items-center">
         <select
           defaultValue={sp.get("genre") ?? ""}
           onChange={(e) => set("genre", e.target.value)}
-          className={cn(selectCls, "min-w-0 flex-1 sm:flex-none")}
+          className={cn(selectCls, "w-full sm:w-auto sm:flex-none")}
           aria-label="Filter by genre"
         >
           <option value="">All genres</option>
@@ -81,7 +81,7 @@ export function LibraryFilters({
         <select
           defaultValue={sp.get("year") ?? ""}
           onChange={(e) => set("year", e.target.value)}
-          className={cn(selectCls, "min-w-0 flex-1 sm:flex-none")}
+          className={cn(selectCls, "w-full sm:w-auto sm:flex-none")}
           aria-label="Filter by year"
         >
           <option value="">All years</option>
@@ -94,7 +94,7 @@ export function LibraryFilters({
         <select
           defaultValue={sp.get("sort") ?? "recent"}
           onChange={(e) => set("sort", e.target.value)}
-          className={cn(selectCls, "min-w-0 flex-1 sm:flex-none")}
+          className={cn(selectCls, "w-full sm:w-auto sm:flex-none")}
           aria-label="Sort"
         >
           <option value="recent">Newest</option>
@@ -105,7 +105,7 @@ export function LibraryFilters({
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="btn btn-ghost px-2 py-1.5 text-sm"
+            className="btn btn-ghost min-h-11 px-2 py-1.5 text-sm"
           >
             Clear
           </button>

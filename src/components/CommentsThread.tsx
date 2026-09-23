@@ -81,12 +81,18 @@ export function CommentsThread({
 
   return (
     <div className="space-y-4">
-      <form ref={formRef} action={submit} className="flex gap-2">
+      <form
+        ref={formRef}
+        action={submit}
+        className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"
+      >
         <input
           name="body"
           required
           maxLength={2000}
           placeholder="Add a comment…"
+          aria-label="Comment"
+          autoComplete="off"
           className="input"
         />
         <button type="submit" className="btn btn-primary">

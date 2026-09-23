@@ -80,16 +80,16 @@ export function FriendsLists({
             Requests ({incoming.length})
           </h2>
           {incoming.map((r) => (
-            <div key={r.id} className="card flex items-center gap-3 py-3">
+            <div key={r.id} className="card flex flex-wrap items-center gap-3 py-3">
               <Avatar
                 url={r.requester?.avatar_url}
                 name={r.requester?.display_name}
                 size={36}
               />
-              <span className="font-medium">
+              <span className="min-w-0 flex-1 truncate font-medium">
                 {r.requester?.display_name ?? r.requester?.email}
               </span>
-              <div className="ml-auto flex gap-2">
+              <div className="ml-auto flex shrink-0 gap-2">
                 <button
                   type="button"
                   onClick={() => accept(r.id)}
@@ -116,16 +116,16 @@ export function FriendsLists({
             Sent ({outgoing.length})
           </h2>
           {outgoing.map((r) => (
-            <div key={r.id} className="card flex items-center gap-3 py-3">
+            <div key={r.id} className="card flex flex-wrap items-center gap-3 py-3">
               <Avatar
                 url={r.recipient?.avatar_url}
                 name={r.recipient?.display_name}
                 size={36}
               />
-              <span className="font-medium">
+              <span className="min-w-0 flex-1 truncate font-medium">
                 {r.recipient?.display_name ?? r.recipient?.email}
               </span>
-              <span className="chip ml-1">pending</span>
+              <span className="chip">pending</span>
               <button
                 type="button"
                 onClick={() => remove(r.id)}
@@ -155,7 +155,7 @@ export function FriendsLists({
                   <Avatar url={o?.avatar_url} name={o?.display_name} size={36} />
                   <Link
                     href={`/friends/${o?.id}`}
-                    className="font-medium hover:underline"
+                    className="min-w-0 flex-1 truncate font-medium hover:underline"
                   >
                     {o?.display_name ?? o?.email}
                   </Link>

@@ -37,7 +37,8 @@ export function RatingMetaForm({
             type="date"
             name="first_listen_date"
             defaultValue={rating?.first_listen_date ?? ""}
-            className="input min-w-0"
+            autoComplete="off"
+            className="input"
           />
         </div>
         <div className="hidden sm:block" />
@@ -50,7 +51,8 @@ export function RatingMetaForm({
             id="favorite_track_id"
             name="favorite_track_id"
             defaultValue={rating?.favorite_track_id ?? ""}
-            className="input min-w-0"
+            autoComplete="off"
+            className="input"
           >
             <option value="">—</option>
             {tracks.map((t) => (
@@ -68,7 +70,8 @@ export function RatingMetaForm({
             id="least_favorite_track_id"
             name="least_favorite_track_id"
             defaultValue={rating?.least_favorite_track_id ?? ""}
-            className="input min-w-0"
+            autoComplete="off"
+            className="input"
           >
             <option value="">—</option>
             {tracks.map((t) => (
@@ -90,6 +93,7 @@ export function RatingMetaForm({
           rows={2}
           defaultValue={rating?.notes ?? ""}
           placeholder="Overall thoughts…"
+          autoComplete="off"
           className="input"
         />
       </div>

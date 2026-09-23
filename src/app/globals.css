@@ -60,9 +60,12 @@
 html {
   /* Visible flash when tapping links/buttons on touch devices. */
   -webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  overflow-x: clip;
 }
 
 body {
+  min-width: 0;
+  overflow-x: clip;
   background: var(--paper);
   color: var(--body);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -94,7 +97,7 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-xl border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition;
+    @apply min-w-0 rounded-xl border border-line bg-surface p-4 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition sm:p-5;
   }
   .btn {
     @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
@@ -112,13 +115,38 @@ body {
     @apply text-accent hover:bg-accent-soft;
   }
   .input {
-    @apply w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-muted transition-colors focus:border-line-strong;
+    @apply block min-h-11 w-full min-w-0 max-w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm leading-5 text-ink placeholder-muted transition-colors focus:border-line-strong;
   }
   .label {
     @apply mb-1 block text-xs font-medium tracking-wide text-muted uppercase;
   }
   .chip {
     @apply inline-flex items-center rounded-full border border-line bg-ivory px-2.5 py-0.5 text-xs text-body;
+  }
+}
+
+/* Keep native controls predictable in iOS Safari. A 16px mobile font avoids
+   viewport zoom, while the explicit date height prevents WebKit's empty date
+   editor from expanding into a large blank box. */
+@media (max-width: 639px) {
+  input:not([type="hidden"]):not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  input[type="date"] {
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    line-height: 20px;
+  }
+
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="date"]::-webkit-datetime-edit {
+    min-height: 20px;
+    padding: 0;
+    text-align: left;
   }
 }
 

@@ -37,7 +37,7 @@ export default async function AppLayout({
         }}
         unreadCount={unreadCount}
       />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-24 sm:pb-6">
+      <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-6 pb-[calc(8.5rem+env(safe-area-inset-bottom))] sm:pb-6">
         {children}
       </main>
       <BottomNav unreadCount={unreadCount} />

@@ -65,7 +65,7 @@ export function SpotifyExtensionCard({
           <p className="mt-1 text-xs text-muted">
             It is only shown once. Paste it into the extension’s connection screen.
           </p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <code className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-paper px-3 py-2 text-xs whitespace-nowrap text-body">
               {token}
             </code>
@@ -88,7 +88,7 @@ export function SpotifyExtensionCard({
           {connections.map((connection) => (
             <div
               key={connection.id}
-              className="flex items-center justify-between gap-3 rounded-xl bg-ivory px-3 py-2"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ivory px-3 py-2"
             >
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-ink">{connection.label}</div>

@@ -40,7 +40,7 @@ export default async function NotificationsPage() {
             Friend requests
           </h2>
           {requests.map((r) => (
-            <div key={r.id} className="card flex items-center gap-3 py-3">
+            <div key={r.id} className="card flex flex-wrap items-center gap-3 py-3">
               <Avatar
                 url={r.requester.avatar}
                 name={r.requester.name}
@@ -55,7 +55,7 @@ export default async function NotificationsPage() {
                 </p>
                 <p className="text-[11px] text-muted">{timeAgo(r.at)}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="ml-auto flex shrink-0 gap-2">
                 <form action={acceptFriend}>
                   <input type="hidden" name="id" value={r.id} />
                   <button
