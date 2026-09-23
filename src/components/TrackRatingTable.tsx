@@ -74,13 +74,14 @@ export function TrackRatingTable({
     <>
       <div className="space-y-2">
         {tracks.map((t) => (
-          <TrackRow
-            key={t.id}
-            albumId={albumId}
-            track={t}
-            onNotice={showNotice}
-            onSaveStart={dismissNotice}
-          />
+          <div key={t.id} id={`track-${t.id}`} className="scroll-mt-20">
+            <TrackRow
+              albumId={albumId}
+              track={t}
+              onNotice={showNotice}
+              onSaveStart={dismissNotice}
+            />
+          </div>
         ))}
       </div>
 

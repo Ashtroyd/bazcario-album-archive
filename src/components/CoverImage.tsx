@@ -4,16 +4,22 @@ export function CoverImage({
   url,
   alt,
   className,
+  priority = false,
 }: {
   url?: string | null;
   alt: string;
   className?: string;
+  priority?: boolean;
 }) {
   if (url) {
     return (
       <img
         src={url}
         alt={alt}
+        width={640}
+        height={640}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         className={cn("bg-ivory object-cover", className)}
       />
     );

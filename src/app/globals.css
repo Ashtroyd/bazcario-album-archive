@@ -180,6 +180,20 @@ body {
   animation: account-menu-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@keyframes dashboard-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.dashboard-hero {
+  animation: dashboard-hero-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .album-scope-pill {
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -329,6 +343,7 @@ body {
   .list-in,
   .animate-tour-in,
   .animate-account-menu-in,
+  .dashboard-hero,
   .month-saving-status,
   .animate-context-in {
     animation: none;

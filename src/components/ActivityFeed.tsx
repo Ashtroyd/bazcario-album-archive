@@ -68,9 +68,15 @@ function Verb({ item }: { item: ActivityItem }) {
 export function ActivityFeed({
   items,
   initialLimit,
+  title = "Activity",
+  showClear = true,
+  viewAllHref,
 }: {
   items: ActivityItem[];
   initialLimit?: number;
+  title?: string;
+  showClear?: boolean;
+  viewAllHref?: string;
 }) {
   const [clearedBefore, setClearedBefore] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -109,8 +115,12 @@ export function ActivityFeed({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-serif text-lg font-semibold text-ink">Activity</h2>
-        {available.length > 0 && (
+        <h2 className="font-serif text-lg font-semibold text-ink">{title}</h2>
+        {viewAllHref ? (
+          <Link href={viewAllHref} className="text-sm text-accent hover:underline">
+            View all →
+          </Link>
+        ) : showClear && available.length > 0 ? (
           <button
             type="button"
             onClick={handleClear}
@@ -118,7 +128,7 @@ export function ActivityFeed({
           >
             Clear
           </button>
-        )}
+        ) : null}
       </div>
 
       {items.length === 0 ? (
