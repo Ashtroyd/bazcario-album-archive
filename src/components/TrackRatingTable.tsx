@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveTrackRating } from "@/app/actions/ratings";
 import { Avatar } from "@/components/Avatar";
+import { IconChevronDown, IconChevronUp } from "@/components/icons";
 import { normalizeRatingInput } from "@/lib/ratingInput";
 import { REPLAY_VALUES, type ReplayValue } from "@/lib/types";
 import { cn, formatScore, scoreColor } from "@/lib/utils";
@@ -49,6 +50,20 @@ export function TrackRatingTable({
   const [toast, setToast] = useState<Toast | null>(null);
   const toastIdRef = useRef(0);
   const toastTimerRef = useRef<number | null>(null);
+  const [ratedTrackIds, setRatedTrackIds] = useState(
+    () => new Set(tracks.filter((track) => track.rating != null).map((track) => track.id)),
+  );
+  const ratedCount = ratedTrackIds.size;
+
+  const updateRatedState = useCallback((trackId: string, rated: boolean) => {
+    setRatedTrackIds((current) => {
+      if (current.has(trackId) === rated) return current;
+      const next = new Set(current);
+      if (rated) next.add(trackId);
+      else next.delete(trackId);
+      return next;
+    });
+  }, []);
 
   const showNotice = useCallback((notice: SaveNotice) => {
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
@@ -72,6 +87,29 @@ export function TrackRatingTable({
 
   return (
     <>
+      <div className="mb-4 flex items-center gap-3 rounded-xl bg-ivory px-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+            <span className="font-medium text-ink">Album progress</span>
+            <span className="text-muted tabular-nums">
+              {ratedCount} of {tracks.length} rated
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-label={`${ratedCount} of ${tracks.length} tracks rated`}
+            aria-valuemin={0}
+            aria-valuemax={tracks.length}
+            aria-valuenow={ratedCount}
+            className="h-1.5 overflow-hidden rounded-full bg-line"
+          >
+            <div
+              className="h-full w-full origin-left rounded-full bg-accent transition-transform duration-500 motion-reduce:transition-none"
+              style={{ transform: `scaleX(${tracks.length ? ratedCount / tracks.length : 0})` }}
+            />
+          </div>
+        </div>
+      </div>
       <div className="space-y-2">
         {tracks.map((t) => (
           <div key={t.id} id={`track-${t.id}`} className="scroll-mt-20">
@@ -80,6 +118,7 @@ export function TrackRatingTable({
               track={t}
               onNotice={showNotice}
               onSaveStart={dismissNotice}
+              onRatedChange={updateRatedState}
             />
           </div>
         ))}
@@ -148,18 +187,22 @@ function TrackRow({
   track,
   onNotice,
   onSaveStart,
+  onRatedChange,
 }: {
   albumId: string;
   track: Row;
   onNotice: (notice: SaveNotice) => void;
   onSaveStart: () => void;
+  onRatedChange: (trackId: string, rated: boolean) => void;
 }) {
   const [rating, setRating] = useState(
     track.rating != null ? String(track.rating) : "",
   );
   const [replay, setReplay] = useState<ReplayValue | "">(track.replay ?? "");
   const [notes, setNotes] = useState(track.notes ?? "");
+  const [expanded, setExpanded] = useState(false);
   const [pendingSaves, setPendingSaves] = useState(0);
+  const [hasSaved, setHasSaved] = useState(false);
   const initialSnapshotRef = useRef<RatingSnapshot>({
     rating: track.rating != null ? String(track.rating) : "",
     replay: track.replay ?? "",
@@ -220,6 +263,8 @@ function TrackRow({
         }
 
         confirmedSnapshotRef.current = snapshot;
+        onRatedChange(track.id, snapshot.rating !== "");
+        setHasSaved(true);
         if (requestId !== requestIdRef.current) return;
 
         if (options.offerUndo) {
@@ -276,7 +321,10 @@ function TrackRow({
   const num = rating === "" ? null : Number(rating);
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition sm:p-4">
+    <div className={cn(
+      "rounded-xl border bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition-colors sm:p-4",
+      expanded ? "border-line-strong" : "border-line",
+    )}>
       {/* Track title */}
       <div className="flex items-center gap-3">
         <span className="w-5 shrink-0 text-right text-xs text-muted">
@@ -326,6 +374,7 @@ function TrackRow({
 
       {/* Quick-set slider */}
       <input
+        name={`rating-slider-${track.id}`}
         type="range"
         min={0}
         max={10}
@@ -341,10 +390,13 @@ function TrackRow({
       {/* Exact value */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <input
+          name={`rating-${track.id}`}
           type="number"
           min={0}
           max={10}
           step={0.01}
+          inputMode="decimal"
+          autoComplete="off"
           value={rating}
           onChange={(e) => setRating(e.target.value)}
           onBlur={() => persist({})}
@@ -358,6 +410,7 @@ function TrackRow({
             type="button"
             onClick={() => {
               setRating("");
+              setExpanded(false);
               persist({ rating: "" });
             }}
             className="text-xs text-muted hover:text-accent"
@@ -367,49 +420,77 @@ function TrackRow({
         )}
 
         <span aria-live="polite" className="ml-auto text-xs whitespace-nowrap text-muted">
-          {pendingSaves > 0 ? "saving…" : ""}
+          {pendingSaves > 0 ? "Saving…" : hasSaved ? "Saved" : ""}
         </span>
       </div>
 
-      {/* Replay value — separate axis from the score above, not a quick-rate shortcut */}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-2">
-        <span
-          className="text-[10px] tracking-wide text-muted uppercase"
-          title="Replay value — how often you'd come back to this track"
+        <button
+          type="button"
+          disabled={rating === ""}
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          aria-controls={`track-details-${track.id}`}
+          className="btn btn-ghost -ml-2 min-h-11 px-2.5 py-1.5 text-xs sm:min-h-9"
         >
-          Would replay?
-        </span>
-        <div className="inline-flex overflow-hidden rounded-lg border border-line">
-          {REPLAY_VALUES.map((rv) => (
-            <button
-              key={rv}
-              type="button"
-              onClick={() => {
-                const next = replay === rv ? "" : rv;
-                setReplay(next);
-                persist({ replay: next });
-              }}
-              className={cn(
-                "px-2.5 py-1 text-xs transition",
-                replay === rv
-                  ? "bg-accent text-white"
-                  : "text-body hover:bg-ivory",
-              )}
-            >
-              {SHORT[rv]}
-            </button>
-          ))}
-        </div>
+          {expanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+          {rating === ""
+            ? "Rate to add details"
+            : expanded
+              ? "Hide details"
+              : replay || notes
+                ? "Edit details"
+                : "Add details"}
+        </button>
+        {!expanded && rating !== "" && (replay || notes) ? (
+          <span className="min-w-0 truncate text-xs text-muted">
+            {[replay ? `${replay} replay` : null, notes || null].filter(Boolean).join(" · ")}
+          </span>
+        ) : null}
       </div>
 
-      {/* Notes */}
-      <input
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        onBlur={() => persist({})}
-        placeholder="Add a note…"
-        className="mt-2 w-full rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink outline-none transition-colors focus:border-line-strong"
-      />
+      {expanded ? (
+        <div id={`track-details-${track.id}`} className="animate-context-in">
+          <div className="space-y-3 pt-3">
+            <fieldset>
+              <legend className="label">Would replay?</legend>
+              <div className="inline-flex max-w-full overflow-hidden rounded-lg border border-line">
+                {REPLAY_VALUES.map((rv) => (
+                  <button
+                    key={rv}
+                    type="button"
+                    aria-pressed={replay === rv}
+                    onClick={() => {
+                      const next = replay === rv ? "" : rv;
+                      setReplay(next);
+                      persist({ replay: next });
+                    }}
+                    className={cn(
+                      "min-h-11 px-2.5 py-1 text-xs transition-colors sm:min-h-9",
+                      replay === rv ? "bg-accent text-white" : "text-body hover:bg-ivory",
+                    )}
+                  >
+                    {SHORT[rv]}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <label className="block">
+              <span className="label">Listening note</span>
+              <input
+                name={`notes-${track.id}`}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                onBlur={() => persist({})}
+                placeholder="A lyric, feeling, or moment…"
+                autoComplete="off"
+                className="input"
+              />
+            </label>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
