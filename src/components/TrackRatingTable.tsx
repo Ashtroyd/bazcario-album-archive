@@ -384,6 +384,7 @@ function TrackRow({
         onPointerUp={() => persist({})}
         onKeyUp={() => persist({})}
         aria-label={`Rating for ${track.name}`}
+        aria-valuetext={num == null ? "Not rated" : `${formatScore(num)} out of 10`}
         className="mt-3 w-full accent-accent"
       />
 

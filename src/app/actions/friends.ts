@@ -58,21 +58,37 @@ export async function sendFriendRequest(formData: FormData) {
 
 export async function acceptFriend(formData: FormData) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Sign in again to accept this request." };
+
   const id = String(formData.get("id") || "");
-  if (id) {
-    await supabase.from("friendships").update({ status: "accepted" }).eq("id", id);
-  }
+  if (!id) return { ok: false as const, error: "This request could not be accepted." };
+
+  const { error } = await supabase.from("friendships").update({ status: "accepted" }).eq("id", id);
+  if (error) return { ok: false as const, error: "The request was not accepted. Try again." };
+
   revalidatePath("/friends");
   revalidatePath("/", "layout");
+  return { ok: true as const };
 }
 
 /** Decline an incoming request, cancel an outgoing one, or unfriend. */
 export async function removeFriend(formData: FormData) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Sign in again to update friends." };
+
   const id = String(formData.get("id") || "");
-  if (id) {
-    await supabase.from("friendships").delete().eq("id", id);
-  }
+  if (!id) return { ok: false as const, error: "This friendship could not be updated." };
+
+  const { error } = await supabase.from("friendships").delete().eq("id", id);
+  if (error) return { ok: false as const, error: "The friendship was not removed. Try again." };
+
   revalidatePath("/friends");
   revalidatePath("/", "layout");
+  return { ok: true as const };
 }

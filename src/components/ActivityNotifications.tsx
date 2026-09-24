@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { acceptFriend, removeFriend } from "@/app/actions/friends";
 import { Avatar } from "@/components/Avatar";
 import { CoverImage } from "@/components/CoverImage";
+import { FriendRequestActions } from "@/components/FriendRequestActions";
 import { IconComment, IconStar } from "@/components/icons";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { getNotifications } from "@/lib/notifications";
@@ -43,16 +43,7 @@ export async function ActivityNotifications({ userId }: { userId: string }) {
                 </p>
                 <p className="text-[11px] text-muted">{timeAgo(request.at)}</p>
               </div>
-              <div className="ml-auto flex shrink-0 gap-2">
-                <form action={acceptFriend}>
-                  <input type="hidden" name="id" value={request.id} />
-                  <button type="submit" className="btn btn-primary px-3 py-1.5 text-sm">Accept</button>
-                </form>
-                <form action={removeFriend}>
-                  <input type="hidden" name="id" value={request.id} />
-                  <button type="submit" className="btn btn-ghost px-3 py-1.5 text-sm">Ignore</button>
-                </form>
-              </div>
+              <FriendRequestActions requestId={request.id} />
             </div>
           ))}
         </section>
