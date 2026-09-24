@@ -154,7 +154,7 @@ function SongRatingEditor({
   }
 
   return (
-    <article className={`group rounded-2xl border bg-surface p-3 shadow-[0_2px_12px_rgba(38,37,33,0.05)] transition-colors sm:p-4 ${expanded ? "border-line-strong" : "border-line"}`}>
+    <article className={`surface-item group p-3 transition-[box-shadow,background-color] sm:p-4 ${expanded ? "surface-selected" : ""}`}>
       <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[64px_minmax(0,1fr)_116px]">
         <CoverImage
           url={song.coverUrl}
@@ -174,7 +174,7 @@ function SongRatingEditor({
         </div>
 
         <div className="col-span-2 flex items-center rounded-xl bg-ivory px-3 py-2 sm:col-span-1 sm:flex-col sm:justify-center sm:px-3">
-          <label htmlFor={`song-score-${song.spotifyTrackId}`} className="text-[10px] font-semibold tracking-[0.14em] text-muted uppercase">
+          <label htmlFor={`song-score-${song.spotifyTrackId}`} className="text-xs font-medium text-muted">
             Score
           </label>
           <input
@@ -198,7 +198,7 @@ function SongRatingEditor({
         </div>
       </div>
 
-      <div className="mt-3 flex min-h-9 flex-wrap items-center gap-2 border-t border-line pt-3">
+      <div className="mt-3 flex min-h-9 flex-wrap items-center gap-2 pt-2">
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
@@ -250,10 +250,10 @@ function SongRatingEditor({
                       setReplayValue(next);
                       if (!isNew) save({ replayValue: next });
                     }}
-                    className={`min-h-11 rounded-full border px-3 py-1.5 text-xs transition-colors sm:min-h-9 ${
+                    className={`min-h-11 rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-9 ${
                       replayValue === value
-                        ? "border-accent bg-accent-soft text-accent"
-                        : "border-line text-muted hover:border-line-strong hover:text-body"
+                        ? "bg-accent text-white"
+                        : "bg-ivory text-muted hover:text-body"
                     }`}
                   >
                     {value}

@@ -160,7 +160,7 @@ export default async function ProfilePage() {
         <div className="grid grid-cols-2 gap-4 self-start">
           {stats.map((s) => (
             <div key={s.label} className="card">
-              <div className="text-xs tracking-wide text-muted uppercase">
+              <div className="eyebrow">
                 {s.label}
               </div>
               <div className="mt-1 text-2xl font-bold text-ink">{s.value}</div>
@@ -205,7 +205,7 @@ export default async function ProfilePage() {
               sub={topAlbum ? formatScore(topAlbum.score) : undefined}
             />
             <div className="card">
-              <div className="text-[10px] tracking-wide text-muted uppercase">
+              <div className="eyebrow">
                 Favourite track
               </div>
               <FavoriteTrackPicker tracks={trackList} current={favTrackId} />
@@ -266,7 +266,7 @@ function Highlight({
 }) {
   return (
     <div className="card">
-      <div className="text-[10px] tracking-wide text-muted uppercase">
+      <div className="eyebrow">
         {label}
       </div>
       <div className="mt-1 truncate font-semibold text-ink" title={value}>

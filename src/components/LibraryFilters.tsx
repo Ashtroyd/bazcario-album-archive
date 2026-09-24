@@ -184,10 +184,10 @@ export function LibraryFilters({
             aria-expanded={open}
             aria-controls="album-library-filters"
             className={cn(
-              "flex h-12 items-center gap-2 rounded-2xl border px-3.5 text-sm font-medium shadow-[0_1px_2px_rgba(38,37,33,0.04)] transition-colors sm:px-4",
+              "flex h-12 items-center gap-2 rounded-2xl px-3.5 text-sm font-medium shadow-[var(--shadow-soft)] transition-colors sm:px-4",
               open || activeFilterCount
-                ? "border-line-strong bg-ink text-paper"
-                : "border-line bg-surface text-body hover:border-line-strong hover:text-ink",
+                ? "bg-ink text-paper"
+                : "bg-surface text-body hover:bg-ivory hover:text-ink",
             )}
           >
             <IconSliders size={17} />
@@ -211,7 +211,7 @@ export function LibraryFilters({
                 id="album-library-filters"
                 role="dialog"
                 aria-label="Album filters"
-                className="library-filter-panel fixed right-0 bottom-0 left-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-[1.75rem] border border-line bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-[0_-18px_60px_rgba(38,37,33,0.2)] sm:absolute sm:top-[calc(100%+0.6rem)] sm:right-0 sm:bottom-auto sm:left-auto sm:z-30 sm:max-h-none sm:w-[23rem] sm:rounded-2xl sm:p-5 sm:shadow-[0_18px_55px_rgba(38,37,33,0.16)]"
+                className="library-filter-panel fixed right-0 bottom-0 left-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-[1.75rem] bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-[0_-18px_60px_rgba(38,37,33,0.2)] sm:absolute sm:top-[calc(100%+0.6rem)] sm:right-0 sm:bottom-auto sm:left-auto sm:z-30 sm:max-h-none sm:w-[23rem] sm:rounded-2xl sm:p-5 sm:shadow-[0_18px_55px_rgba(38,37,33,0.16)]"
               >
                 <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-line-strong sm:hidden" />
                 <div className="mb-5 flex items-center justify-between gap-4">
@@ -237,7 +237,7 @@ export function LibraryFilters({
                       {RATING_OPTIONS.map((option) => (
                         <label
                           key={option.value}
-                          className="has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-body transition-colors"
+                          className="has-[:checked]:bg-ink has-[:checked]:text-paper flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-xl bg-ivory px-3 py-2.5 text-sm text-body transition-colors"
                         >
                           <input
                             type="radio"

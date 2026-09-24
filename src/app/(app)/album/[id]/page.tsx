@@ -271,7 +271,7 @@ export default async function AlbumDetailPage({
         {/* Friends who also rated */}
         {others.length > 0 && (
           <section>
-            <h2 className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
+            <h2 className="mb-2 text-[13px] font-medium text-muted">
               Also rated by
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -279,7 +279,7 @@ export default async function AlbumDetailPage({
                 <Link
                   key={o.user_id}
                   href={`/album/${id}/compare/${o.user_id}`}
-                  className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition hover:border-line-strong"
+                  className="surface-item flex items-center gap-2 px-3 py-2 hover:bg-ivory"
                 >
                   <Avatar
                     url={o.profiles?.avatar_url}

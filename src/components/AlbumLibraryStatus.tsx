@@ -42,7 +42,7 @@ export function AlbumLibraryStatus({
   return (
     <aside
       aria-label="Album library status"
-      className="animate-context-in rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgba(38,37,33,0.06)]"
+      className="surface-panel animate-context-in"
     >
       <div className="flex gap-3 p-4 sm:items-center sm:p-5">
         <div
@@ -61,7 +61,7 @@ export function AlbumLibraryStatus({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-semibold tracking-[0.16em] text-muted uppercase">
+          <div className="eyebrow">
             {label}
           </div>
           <h2 className="font-serif text-lg font-semibold text-ink">

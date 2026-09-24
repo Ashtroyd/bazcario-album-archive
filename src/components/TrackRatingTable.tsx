@@ -322,8 +322,8 @@ function TrackRow({
 
   return (
     <div className={cn(
-      "rounded-xl border bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition-colors sm:p-4",
-      expanded ? "border-line-strong" : "border-line",
+      "surface-item p-3 transition-[box-shadow,background-color] sm:p-4",
+      expanded ? "surface-selected" : "",
     )}>
       {/* Track title */}
       <div className="flex items-center gap-3">
@@ -351,7 +351,7 @@ function TrackRow({
           return (
             <div
               key={`${name}-${friend.avatar ?? index}-${index}`}
-              className="flex min-w-36 flex-1 items-center gap-2 rounded-lg border border-line bg-ivory px-2.5 py-2 transition-colors hover:border-line-strong sm:flex-none"
+              className="flex min-w-36 flex-1 items-center gap-2 rounded-lg bg-ivory px-2.5 py-2 transition-colors hover:bg-line sm:flex-none"
             >
               <span aria-hidden="true" className="shrink-0">
                 <Avatar url={friend.avatar} name={name} size={22} />
@@ -402,7 +402,7 @@ function TrackRow({
           onBlur={() => persist({})}
           placeholder="–"
           aria-label={`Exact rating for ${track.name}`}
-          className="w-16 rounded-md border border-line bg-paper px-2 py-1 text-center text-sm text-ink outline-none transition-colors focus:border-line-strong"
+          className="w-16 rounded-md border border-line bg-paper px-2 py-1 text-center text-sm text-ink transition-colors focus:border-line-strong"
         />
 
         {rating !== "" && (
@@ -424,7 +424,7 @@ function TrackRow({
         </span>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2 pt-1">
         <button
           type="button"
           disabled={rating === ""}

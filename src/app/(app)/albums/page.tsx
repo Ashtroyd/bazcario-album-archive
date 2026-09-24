@@ -229,7 +229,7 @@ export default async function LibraryPage({
         <LibraryModeSwitch active="albums" />
       </div>
 
-      <section className="space-y-4 rounded-2xl border border-line bg-paper/70 p-3 sm:p-4" aria-label="Browse albums">
+      <section className="surface-panel space-y-4 p-3 sm:p-4" aria-label="Browse albums">
         <AlbumScopeTabs
           active={scope}
           counts={counts}

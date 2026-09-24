@@ -35,7 +35,7 @@ function RatingProvenance({ rating }: { rating: AlbumCardRating }) {
   if (rating.kind === "friend") {
     const name = rating.name?.trim() || "A friend";
     return (
-      <div className="mt-auto flex min-h-9 items-center gap-2 rounded-lg border border-line bg-ivory px-2 py-1.5 transition-colors group-hover:border-line-strong">
+      <div className="mt-auto flex min-h-9 items-center gap-2 rounded-lg bg-ivory px-2 py-1.5 transition-colors group-hover:bg-line">
         <span aria-hidden="true" className="shrink-0">
           <Avatar url={rating.avatarUrl} name={name} size={21} />
         </span>
@@ -48,7 +48,7 @@ function RatingProvenance({ rating }: { rating: AlbumCardRating }) {
         ) : null}
         {(rating.additionalCount ?? 0) > 0 ? (
           <span
-            className="rounded-full border border-line-strong bg-surface px-1.5 py-0.5 text-[10px] font-medium text-muted"
+            className="rounded-full bg-surface px-1.5 py-0.5 text-[11px] font-medium text-muted"
             aria-label={`${rating.additionalCount} more friend${rating.additionalCount === 1 ? "" : "s"} rated this album`}
           >
             +{rating.additionalCount}
@@ -59,7 +59,7 @@ function RatingProvenance({ rating }: { rating: AlbumCardRating }) {
   }
 
   return (
-    <div className="mt-auto flex min-h-9 items-center rounded-lg border border-dashed border-line-strong px-2.5 py-1.5 text-xs text-muted transition-colors group-hover:bg-ivory">
+    <div className="mt-auto flex min-h-9 items-center rounded-lg bg-ivory/65 px-2.5 py-1.5 text-xs text-muted transition-colors group-hover:bg-ivory">
       Not rated by you
     </div>
   );
@@ -75,7 +75,7 @@ export function AlbumCard({
   return (
     <Link
       href={`/album/${album.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_28px_rgba(38,37,33,0.14)]"
+      className="surface-item group flex flex-col overflow-hidden duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lifted)]"
     >
       <div className="relative aspect-square w-full">
         <CoverImage

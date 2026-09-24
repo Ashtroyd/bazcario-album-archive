@@ -127,7 +127,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <header>
-        <p className="text-sm font-medium text-accent">Your archive</p>
+        <p className="eyebrow">Your archive</p>
         <h1 className="mt-0.5 text-balance font-serif text-2xl font-bold text-ink sm:text-3xl">
           Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}.
         </h1>
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
                   <Link
                     key={friend.userId}
                     href={`/friends/${friend.userId}/favourites/${monthParam(currentMonth)}`}
-                    className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pr-2.5 pl-1 transition-colors hover:border-line-strong hover:bg-ivory"
+                    className="flex items-center gap-2 rounded-full bg-surface py-1 pr-2.5 pl-1 shadow-[var(--shadow-soft)] transition-colors hover:bg-ivory"
                   >
                     <Avatar url={friend.avatar} name={friend.name} size={24} />
                     <span className="text-xs font-medium text-body">

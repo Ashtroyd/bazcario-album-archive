@@ -23,7 +23,7 @@ export function AlbumScopeTabs({
   return (
     <nav
       aria-label="Album collection"
-      className="relative grid w-full grid-cols-3 rounded-2xl border border-line bg-surface p-1 shadow-[0_2px_10px_rgba(38,37,33,0.05)] sm:w-auto sm:min-w-md"
+      className="relative grid w-full grid-cols-3 rounded-2xl bg-ivory p-1 sm:w-auto sm:min-w-md"
     >
       <span
         aria-hidden="true"

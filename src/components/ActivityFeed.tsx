@@ -151,7 +151,7 @@ export function ActivityFeed({
               >
                 <Link
                   href={linkFor(item)}
-                  className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(38,37,33,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_28px_rgba(38,37,33,0.14)]"
+                  className="surface-item flex items-center gap-3 p-3 duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lifted)]"
                 >
                   <div className="relative shrink-0">
                     <Avatar

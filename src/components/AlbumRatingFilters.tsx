@@ -24,10 +24,10 @@ export function AlbumRatingFilters({
       aria-label="Filter albums by rating status"
       className="flex flex-col gap-2 sm:flex-row sm:items-center"
     >
-      <span className="shrink-0 text-[10px] font-medium tracking-[0.14em] text-muted uppercase">
+      <span className="shrink-0 text-[13px] font-medium text-muted">
         Rating status
       </span>
-      <div className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1 shadow-[0_1px_2px_rgba(38,37,33,0.05)] sm:flex sm:flex-wrap">
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-ivory p-1 sm:flex sm:flex-wrap">
         {FILTERS.map((filter) => {
           const selected = active === filter.value;
 
@@ -42,14 +42,14 @@ export function AlbumRatingFilters({
                 "flex min-w-0 items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium transition duration-200 motion-reduce:transform-none sm:justify-center",
                 selected
                   ? "bg-accent text-white shadow-[0_3px_10px_rgba(193,88,55,0.22)]"
-                  : "text-muted hover:-translate-y-px hover:bg-ivory hover:text-ink",
+                  : "text-muted hover:-translate-y-px hover:bg-surface hover:text-ink",
               )}
             >
               <span className="truncate">{filter.label}</span>
               <span
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-[10px] tabular-nums transition-colors",
-                  selected ? "bg-white/15 text-white" : "bg-ivory text-muted",
+                  selected ? "bg-white/15 text-white" : "bg-surface text-muted",
                 )}
               >
                 {counts[filter.value]}
