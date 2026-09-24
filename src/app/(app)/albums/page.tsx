@@ -4,14 +4,10 @@ import {
   AlbumCard,
   type AlbumCardRating,
 } from "@/components/AlbumCard";
-import {
-  AlbumRatingFilters,
-  type AlbumRatingFilter,
-} from "@/components/AlbumRatingFilters";
+import type { AlbumRatingFilter } from "@/components/AlbumRatingFilters";
 import { AlbumScopeTabs, type AlbumScope } from "@/components/AlbumScopeTabs";
 import { LibraryFilters } from "@/components/LibraryFilters";
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
-import { OwnershipPrimer } from "@/components/OwnershipPrimer";
 import type { Album } from "@/lib/types";
 
 export default async function LibraryPage({
@@ -193,16 +189,6 @@ export default async function LibraryPage({
     else ratingCounts.unrated += 1;
     if (friendRatedAlbumIds.has(album.id)) ratingCounts.friends += 1;
   }
-  const ratingHref = (nextFilter: AlbumRatingFilter) => {
-    const params = new URLSearchParams();
-    if (scope !== "mine") params.set("scope", scope);
-    if (nextFilter !== "any") params.set("rating", nextFilter);
-    for (const key of ["q", "genre", "year", "sort"] as const) {
-      if (sp[key]) params.set(key, sp[key]!);
-    }
-    const query = params.toString();
-    return query ? `/albums?${query}` : "/albums";
-  };
   const cardRating = (albumId: string): AlbumCardRating => {
     if (scope !== "friends" && scoreMap.has(albumId)) {
       return { kind: "self", score: scoreMap.get(albumId) ?? null };
@@ -233,7 +219,7 @@ export default async function LibraryPage({
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink">Albums</h1>
+          <h1 className="font-serif text-2xl font-bold text-ink">Library</h1>
           <p className="text-sm text-muted">
             {list.length === scopedAlbums.length
               ? `${scopedAlbums.length} album${scopedAlbums.length === 1 ? "" : "s"}`
@@ -243,7 +229,7 @@ export default async function LibraryPage({
         <LibraryModeSwitch active="albums" />
       </div>
 
-      <div className="space-y-2">
+      <section className="space-y-4 rounded-2xl border border-line bg-paper/70 p-3 sm:p-4" aria-label="Browse albums">
         <AlbumScopeTabs
           active={scope}
           counts={counts}
@@ -254,22 +240,20 @@ export default async function LibraryPage({
           }}
         />
         <p className="max-w-2xl text-sm text-muted">{scopeCopy[scope]}</p>
-      </div>
-
-      <OwnershipPrimer userId={user!.id} />
-
-      <AlbumRatingFilters
-        active={ratingFilter}
-        counts={ratingCounts}
-        hrefs={{
-          any: ratingHref("any"),
-          mine: ratingHref("mine"),
-          unrated: ratingHref("unrated"),
-          friends: ratingHref("friends"),
-        }}
-      />
-
-      <LibraryFilters genres={genres} years={years} scope={scope} />
+        <LibraryFilters
+          genres={genres}
+          years={years}
+          scope={scope}
+          current={{
+            q: sp.q,
+            genre: sp.genre,
+            year: sp.year,
+            sort: sp.sort,
+            rating: ratingFilter,
+          }}
+          ratingCounts={ratingCounts}
+        />
+      </section>
 
       {list.length === 0 ? (
         <div className="card text-center text-sm text-muted">

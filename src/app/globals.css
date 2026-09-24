@@ -213,30 +213,39 @@ body {
   animation: scope-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes ownership-primer-in {
+@keyframes library-filter-sheet-in {
   from {
     opacity: 0;
-    transform: translateY(-6px) scale(0.995);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-@keyframes ownership-primer-out {
-  to {
-    opacity: 0;
-    transform: translateY(-5px) scale(0.995);
+.library-filter-panel {
+  animation: library-filter-sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 640px) {
+  @keyframes library-filter-popover-in {
+    from {
+      opacity: 0;
+      transform: translateY(-5px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
-}
 
-.ownership-primer {
-  animation: ownership-primer-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.ownership-primer-closing {
-  animation: ownership-primer-out 0.2s ease-in both;
+  .library-filter-panel {
+    transform-origin: top right;
+    animation-name: library-filter-popover-in;
+    animation-duration: 0.18s;
+  }
 }
 
 @keyframes month-status-in {
@@ -338,14 +347,16 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in,
   .animate-scope-in,
-  .ownership-primer,
-  .ownership-primer-closing,
   .list-in,
   .animate-tour-in,
   .animate-account-menu-in,
   .dashboard-hero,
   .month-saving-status,
   .animate-context-in {
+    animation: none;
+  }
+
+  .library-filter-panel {
     animation: none;
   }
 

@@ -192,3 +192,22 @@ export function IconX({ className, size }: IconProps) {
     </svg>
   );
 }
+
+export function IconSearch({ className, size }: IconProps) {
+  return (
+    <svg {...svgProps(size)} className={className}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4-4" />
+    </svg>
+  );
+}
+
+export function IconSliders({ className, size }: IconProps) {
+  return (
+    <svg {...svgProps(size)} className={className}>
+      <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="8" cy="17" r="2" />
+    </svg>
+  );
+}

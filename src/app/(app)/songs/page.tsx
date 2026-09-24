@@ -15,7 +15,7 @@ export default async function SongsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink">Song ratings</h1>
+          <h1 className="font-serif text-2xl font-bold text-ink">Library</h1>
           <p className="text-sm text-muted">Score individual songs without changing an album average.</p>
         </div>
         <LibraryModeSwitch active="songs" />

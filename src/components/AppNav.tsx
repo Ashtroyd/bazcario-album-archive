@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/", label: "Home", section: "home", tour: undefined },
-  { href: "/albums", label: "Library", section: "library", tour: undefined },
+  { href: "/albums", label: "Library", section: "library", tour: "library-nav" },
   { href: "/friends", label: "Friends", section: "friends", tour: "friends-nav" },
   { href: "/activity", label: "Activity", section: "activity", tour: "activity-nav" },
 ] as const;

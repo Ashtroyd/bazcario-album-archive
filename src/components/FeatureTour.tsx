@@ -17,6 +17,11 @@ const STEPS: TourStep[] = [
     body: "Search a title and cover art, tracklist, and release year fill in automatically. Rate each track and your overall score is calculated for you.",
   },
   {
+    target: "library-nav",
+    title: "Your library, clearly separated",
+    body: "Albums are shared in one catalog, but ratings, replay choices, and notes save only to your account. Switch between Mine, Friends, and All to see whose activity you’re viewing.",
+  },
+  {
     target: "activity-nav",
     title: "See what’s new",
     body: "New releases, friend requests, comments, and rating comparisons now live together in Activity.",

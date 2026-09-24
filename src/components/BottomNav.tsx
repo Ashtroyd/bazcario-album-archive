@@ -14,7 +14,7 @@ import {
 
 const ITEMS = [
   { href: "/", label: "Home", Icon: IconHome, section: "home", tour: undefined, action: false },
-  { href: "/albums", label: "Library", Icon: IconDisc, section: "library", tour: undefined, action: false },
+  { href: "/albums", label: "Library", Icon: IconDisc, section: "library", tour: "library-nav", action: false },
   { href: "/album/new", label: "Add", Icon: IconPlus, section: "add", tour: "add-album", action: true },
   { href: "/friends", label: "Friends", Icon: IconUsers, section: "friends", tour: "friends-nav", action: false },
   { href: "/activity", label: "Activity", Icon: IconBell, section: "activity", tour: "activity-nav", action: false },
