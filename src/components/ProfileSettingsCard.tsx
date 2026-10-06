@@ -5,27 +5,36 @@ import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { Avatar } from "@/components/Avatar";
 import { startTour } from "@/lib/tour-bus";
+import type { Visibility } from "@/lib/types";
+
+const visibilityLabels = { friends: "Friends only", public: "Public", private: "Private" };
 
 /** The profile's avatar/name/email settings, collapsed to a view with an Edit button. */
 export function ProfileSettingsCard({
   avatarUrl,
   displayName,
   email,
+  visibility,
 }: {
   avatarUrl: string | null;
   displayName: string | null;
   email: string | null;
+  visibility: Visibility;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
     setSaving(true);
-    await updateProfile(formData);
-    setSaving(false);
-    setEditing(false);
-    router.refresh();
+    setError(null);
+    try {
+      const result = await updateProfile(formData);
+      if (result.error) { setError(result.error); return; }
+      setEditing(false); router.refresh();
+    } catch { setError("Couldn't save your profile. Check your connection and try again."); }
+    finally { setSaving(false); }
   }
 
   if (!editing) {
@@ -41,10 +50,9 @@ export function ProfileSettingsCard({
           </div>
         </div>
         <div>
-          <span className="chip">Friends-only (default)</span>
+          <span className="chip">{visibilityLabels[visibility]}</span>
           <p className="mt-1 text-xs text-muted">
-            A public/private toggle is coming. For now, your ratings are
-            visible only to you and your accepted friends.
+            {visibility === "private" ? "Your ratings are visible only to you." : visibility === "public" ? "Your ratings are public." : "Your ratings are visible to you and your accepted friends."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -69,6 +77,7 @@ export function ProfileSettingsCard({
 
   return (
     <form action={handleSubmit} className="card space-y-4">
+      {error && <p role="alert" className="text-sm text-accent">{error}</p>}
       <div className="flex items-center gap-4">
         <Avatar url={avatarUrl} name={displayName} size={64} />
         <div className="min-w-0 flex-1">
@@ -109,11 +118,14 @@ export function ProfileSettingsCard({
       </div>
 
       <div>
-        <label className="label">Visibility</label>
-        <span className="chip">Friends-only (default)</span>
+        <label className="label" htmlFor="visibility">Ratings visibility</label>
+        <select id="visibility" name="visibility" defaultValue={visibility} className="input">
+          <option value="friends">Friends only</option>
+          <option value="public">Public</option>
+          <option value="private">Private — only me</option>
+        </select>
         <p className="mt-1 text-xs text-muted">
-          A public/private toggle is coming. For now, your ratings are
-          visible only to you and your accepted friends.
+          Controls ratings, reviews and monthly favourites. Your name remains discoverable to signed-in users for friend requests.
         </p>
       </div>
 

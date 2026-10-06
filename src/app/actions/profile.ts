@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createHash, randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
+import { validatePasswordChange } from "@/lib/password-policy";
 
 const EXTENSION_TOKEN_PREFIX = "baa_ext_";
 
@@ -11,11 +12,16 @@ export async function updateProfile(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Sign in again to update your profile." };
 
   const update: Record<string, unknown> = {};
   const displayName = String(formData.get("display_name") || "").trim();
   if (displayName) update.display_name = displayName;
+  const visibility = formData.get("visibility");
+  if (visibility !== null) {
+    if (!["friends", "public", "private"].includes(String(visibility))) return { error: "Choose a valid visibility setting." };
+    update.visibility = visibility;
+  }
 
   const file = formData.get("avatar");
   if (file instanceof File && file.size > 0) {
@@ -24,6 +30,7 @@ export async function updateProfile(formData: FormData) {
     const { error: upErr } = await supabase.storage
       .from("avatars")
       .upload(path, file, { upsert: true, contentType: file.type || undefined });
+    if (upErr) return { error: "Couldn't upload your avatar. Try again." };
     if (!upErr) {
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
       update.avatar_url = pub.publicUrl;
@@ -31,10 +38,27 @@ export async function updateProfile(formData: FormData) {
   }
 
   if (Object.keys(update).length > 0) {
-    await supabase.from("profiles").update(update).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
+    if (error) return { error: "Couldn't save your profile. Try again." };
   }
   revalidatePath("/profile");
   revalidatePath("/", "layout");
+  return { error: null };
+}
+
+export async function changePassword(formData: FormData): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user?.email) return { error: "Sign in again to change your password." };
+  const current = String(formData.get("current_password") ?? "");
+  const password = String(formData.get("new_password") ?? "");
+  const confirm = String(formData.get("confirm_password") ?? "");
+  const validationError = validatePasswordChange(current, password, confirm);
+  if (validationError) return { error: validationError };
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
+  if (signInError) return { error: "Your current password wasn't accepted. Check it and try again." };
+  const { error } = await supabase.auth.updateUser({ password });
+  return { error: error ? "Couldn't change your password. Try again, or use the password-reset email." : null };
 }
 
 export async function setFavoriteTrack(formData: FormData) {

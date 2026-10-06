@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
 import { FavoriteTrackPicker } from "@/components/FavoriteTrackPicker";
 import { ProfileSettingsCard } from "@/components/ProfileSettingsCard";
+import { PasswordSettingsCard } from "@/components/PasswordSettingsCard";
 import { SpotifyExtensionCard } from "@/components/SpotifyExtensionCard";
 import { MonthlyFavoritesMonthSection } from "@/components/MonthlyFavoritesMonthSection";
 import { cn, formatScore } from "@/lib/utils";
@@ -150,11 +151,15 @@ export default async function ProfilePage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
-        <ProfileSettingsCard
-          avatarUrl={profile?.avatar_url ?? null}
-          displayName={profile?.display_name ?? null}
-          email={user?.email ?? null}
-        />
+        <div className="space-y-6">
+          <ProfileSettingsCard
+            visibility={profile?.visibility ?? "friends"}
+            avatarUrl={profile?.avatar_url ?? null}
+            displayName={profile?.display_name ?? null}
+            email={user?.email ?? null}
+          />
+          <PasswordSettingsCard />
+        </div>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-4 self-start">
