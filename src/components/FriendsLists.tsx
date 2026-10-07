@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { acceptFriend, removeFriend } from "@/app/actions/friends";
 import { Avatar } from "@/components/Avatar";
+import { CoverImage } from "@/components/CoverImage";
+import { formatScore } from "@/lib/utils";
+import type { FriendInsight } from "@/lib/friends-hub";
 
 export type ProfileLite = {
   id: string;
@@ -24,15 +27,20 @@ export type FriendshipRow = {
 
 type RemovalNotice = { row: FriendshipRow; label: string; index: number };
 
-export function FriendsLists({ rows, meId }: { rows: FriendshipRow[]; meId: string }) {
+export function FriendsLists({ rows, meId, insights = {} }: { rows: FriendshipRow[]; meId: string; insights?: Record<string, FriendInsight> }) {
   const [visibleRows, setVisibleRows] = useState(rows);
   const [notice, setNotice] = useState<RemovalNotice | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const removalTimerRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
+  const [previousRows, setPreviousRows] = useState(rows);
+  if (rows !== previousRows) {
+    setPreviousRows(rows);
+    setVisibleRows(rows.filter((row) => row.id !== notice?.row.id));
+  }
 
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const accepted = visibleRows.filter((row) => row.status === "accepted");
   const incoming = visibleRows.filter((row) => row.status === "pending" && row.friend_id === meId);
@@ -131,19 +139,31 @@ export function FriendsLists({ rows, meId }: { rows: FriendshipRow[]; meId: stri
       ) : null}
 
       <section className="space-y-2">
-        <h2 className="eyebrow">Your friends ({accepted.length})</h2>
+        <h2 className="font-serif text-xl font-semibold text-ink">Your circle <span className="font-sans text-sm font-normal text-muted">· {accepted.length}</span></h2>
         {accepted.length === 0 ? (
-          <p className="text-sm text-muted">No friends yet. Search above to add some.</p>
+          <p className="text-sm text-muted">No friends yet. Search below to add some.</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {accepted.map((row) => {
               const person = other(row);
               const name = person?.display_name ?? person?.email ?? "Friend";
+              const personId = row.user_id === meId ? row.friend_id : row.user_id;
+              const insight = insights[personId];
               return (
-                <div key={row.id} className="card flex items-center gap-3 py-3">
-                  <Avatar url={person?.avatar_url} name={person?.display_name} size={36} />
-                  <Link href={`/friends/${person?.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">{name}</Link>
-                  <button type="button" onClick={() => scheduleRemoval(row, `${name} removed`)} disabled={pending} className="btn btn-danger ml-auto px-3 py-1.5 text-sm">Unfriend</button>
+                <div key={row.id} className="card space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Link href={`/friends/${personId}`} aria-label={`View ${name}`}><Avatar url={person?.avatar_url} name={person?.display_name} size={44} /></Link>
+                    <div className="min-w-0 flex-1"><Link href={`/friends/${personId}`} className="block truncate font-semibold text-ink hover:underline">{name}</Link><p className="mt-0.5 text-xs text-muted">{insight?.sharedAlbums ? `${insight.sharedAlbums} shared album${insight.sharedAlbums === 1 ? "" : "s"}` : "Find your common ground"}</p></div>
+                    {insight?.matchPct != null && <div className="shrink-0 text-right"><p className="text-xl font-semibold tabular-nums text-sage">{insight.matchPct}%</p><p className="text-[10px] text-muted">Album score match</p></div>}
+                  </div>
+                  {insight?.favourite ? <Link href={`/album/${insight.favourite.id}`} className="flex min-w-0 items-center gap-3 rounded-xl bg-ivory/70 p-3 transition-colors hover:bg-ivory">
+                    <CoverImage url={insight.favourite.cover_image_url} alt="" className="h-11 w-11 shrink-0 rounded-md" />
+                    <div className="min-w-0"><p className="text-[11px] text-muted">One of their highest scores</p><p className="truncate text-sm font-medium text-ink">{insight.favourite.title}</p><p className="truncate text-xs text-muted">{insight.favourite.artist}</p></div>
+                  </Link> : <p className="rounded-xl bg-ivory/50 p-3 text-xs text-muted">No visible album scores yet. Their private ratings aren&apos;t included.</p>}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+                    <p className="text-xs text-muted">{insight?.scoredAlbums ? `${insight.scoredAlbums} visible scores · avg ${formatScore(insight.average)}` : "Visit their profile to explore"}</p>
+                    <button type="button" aria-label={`Unfriend ${name}`} onClick={() => scheduleRemoval(row, `${name} removed`)} disabled={pending} className="btn btn-danger px-2 py-1 text-xs">Unfriend</button>
+                  </div>
                 </div>
               );
             })}

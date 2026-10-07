@@ -39,6 +39,7 @@ export function AddFriendSearch() {
       <h2 className="text-sm font-semibold text-ink">Add a friend</h2>
       <form onSubmit={doSearch} className="flex gap-2">
         <input
+          aria-label="Search friends by name or email"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search by name or email…"
