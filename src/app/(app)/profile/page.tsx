@@ -144,6 +144,7 @@ export default async function ProfilePage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-ink">Profile</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <Link href="/recap" className="btn btn-outline text-sm">Monthly recap</Link>
           <Link href="/favourites" className="btn btn-outline text-sm">
             Favourite songs
           </Link>

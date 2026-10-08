@@ -19,6 +19,11 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
   ratings (0–10, .01 precision), replay value, and notes.
 - **Auto overall** — each album's overall score is the average of your track
   ratings, recomputed automatically by a DB trigger.
+- **Monthly recap** — albums rated or revisited by their latest saved update,
+  monthly favourite songs (or favourites from those albums), and current
+  visible score disagreements with accepted friends. Download a PNG without
+  notes or friends’ names from Home or Profile. Months use UTC; recaps are
+  live summaries, not frozen historical snapshots.
 - **Library** — grid with search (title/artist) and filter/sort by genre, year,
   and your score.
 - **Listening queue** — private Want to listen / Listening lists, with Save for
