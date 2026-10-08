@@ -21,6 +21,7 @@ function sectionIsActive(section: Section, pathname: string) {
     return (
       pathname.startsWith("/albums") ||
       pathname.startsWith("/songs") ||
+      pathname.startsWith("/queue") ||
       (pathname.startsWith("/album/") && pathname !== "/album/new")
     );
   }

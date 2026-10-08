@@ -21,6 +21,9 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
   ratings, recomputed automatically by a DB trigger.
 - **Library** — grid with search (title/artist) and filter/sort by genre, year,
   and your score.
+- **Listening queue** — private Want to listen / Listening lists, with Save for
+  later on friends’ discoveries. Rated is derived from real track scores;
+  removing a queued album never removes ratings or notes. Find it in Library → Queue.
 - **Friends** — send/accept/decline requests, search by name or email, view a
   friend's profile and scores (gated by RLS).
 - **Compare** — you vs. a friend, track-by-track, with the biggest rating gaps

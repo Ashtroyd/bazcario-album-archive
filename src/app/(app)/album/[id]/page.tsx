@@ -9,6 +9,8 @@ import { RatingMetaForm } from "@/components/RatingMetaForm";
 import { Comments } from "@/components/Comments";
 import { AlbumActionsMenu } from "@/components/AlbumActionsMenu";
 import { AlbumLibraryStatus } from "@/components/AlbumLibraryStatus";
+import { ListeningQueueControl } from "@/components/ListeningQueueControl";
+import type { QueueStatus } from "@/lib/listening-queue";
 import { IconHeart, IconMoon } from "@/components/icons";
 import { formatDate, formatScore } from "@/lib/utils";
 import type {
@@ -64,6 +66,7 @@ export default async function AlbumDetailPage({
     .eq("user_id", user!.id)
     .maybeSingle();
   const myRating = (myRatingData as Rating | null) ?? null;
+  const { data: queueEntry } = await supabase.from("album_listening_queue").select("status").eq("user_id", user!.id).eq("album_id", id).maybeSingle();
 
   let myTrackRatings: TrackRating[] = [];
   if (trackIds.length > 0) {
@@ -260,6 +263,7 @@ export default async function AlbumDetailPage({
       </div>
 
       <div className="mx-auto max-w-4xl space-y-8">
+        <section aria-label="Your listening queue" className="surface-panel p-4 sm:p-5"><ListeningQueueControl albumId={id} initialStatus={(queueEntry?.status as QueueStatus) ?? null} rated={myRating?.overall_rating != null}/></section>
         <AlbumLibraryStatus
           isInMyLibrary={isInMyLibrary}
           friends={others.map((other) => ({

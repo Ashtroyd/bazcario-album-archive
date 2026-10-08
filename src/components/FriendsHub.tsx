@@ -4,13 +4,15 @@ import { CoverImage } from "./CoverImage";
 import { ScoreBadge } from "./ScoreBadge";
 import { formatScore, timeAgo } from "@/lib/utils";
 import type { FriendsHub as HubData, CircleAlbum } from "@/lib/friends-hub";
+import type { QueueStatus } from "@/lib/listening-queue";
+import { ListeningQueueControl } from "./ListeningQueueControl";
 
 function ListenerLabel({ pick }: { pick: CircleAlbum }) {
   const first = pick.listeners[0];
   return <span>{pick.listeners.length === 1 ? first.name : `${first.name} + ${pick.listeners.length - 1}`} · {formatScore(pick.average)}/10</span>;
 }
 
-export function FriendsHub({ data, friendCount, unavailable = false }: { data: HubData; friendCount: number; unavailable?: boolean }) {
+export function FriendsHub({ data, friendCount, unavailable = false, savedQueue = {} }: { data: HubData; friendCount: number; unavailable?: boolean; savedQueue?: Record<string, QueueStatus> }) {
   const hasDiscovery = data.discoveries.length > 0;
   return <div className="space-y-7">
     {unavailable && <p role="status" className="rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent">Music insights couldn&apos;t load. Your friend controls are still available—reload to try again.</p>}
@@ -25,7 +27,7 @@ export function FriendsHub({ data, friendCount, unavailable = false }: { data: H
           {!hasDiscovery && <a href="#find-friends" className="btn btn-outline mt-5">{friendCount ? "Find more friends" : "Find a friend"}</a>}
         </div>
         {hasDiscovery ? <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          {data.discoveries.map((pick, index) => <Link key={pick.album.id} href={`/album/${pick.album.id}`} className="group min-w-0">
+          {data.discoveries.map((pick, index) => <div key={pick.album.id} className="min-w-0"><Link href={`/album/${pick.album.id}`} className="group block min-w-0">
             <div className="relative aspect-square overflow-hidden rounded-xl bg-ivory shadow-[var(--shadow-soft)]">
               <CoverImage url={pick.album.cover_image_url} alt={`${pick.album.title} cover`} priority={index < 2} className="h-full w-full transition-transform duration-300 motion-reduce:transition-none group-hover:scale-[1.03]" />
               <span className="absolute right-2 bottom-2 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-paper">{formatScore(pick.average)}<span className="font-normal text-paper/65"> / 10</span></span>
@@ -33,7 +35,7 @@ export function FriendsHub({ data, friendCount, unavailable = false }: { data: H
             <p className="mt-2 truncate text-sm font-semibold text-ink">{pick.album.title}</p>
             <p className="truncate text-xs text-muted">{pick.album.artist}</p>
             <p className="mt-1 truncate text-xs text-body"><ListenerLabel pick={pick} /></p>
-          </Link>)}
+          </Link><div className="mt-2"><ListeningQueueControl compact albumId={pick.album.id} initialStatus={savedQueue[pick.album.id] ?? null} /></div></div>)}
         </div> : <div className="flex min-h-48 items-center justify-center rounded-xl bg-ivory p-6 text-center">
           <div><span aria-hidden="true" className="block font-serif text-6xl text-accent/50">♫</span><p className="mt-4 text-sm font-medium text-ink">Good music travels between friends.</p><p className="mt-1 text-xs text-muted">Discoveries start with their shared scores.</p></div>
         </div>}

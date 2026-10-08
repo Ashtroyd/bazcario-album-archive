@@ -4,6 +4,7 @@ import { FriendsLists, type FriendshipRow } from "@/components/FriendsLists";
 import { FriendsHub } from "@/components/FriendsHub";
 import { buildFriendsHub } from "@/lib/friends-hub";
 import { loadHubRatings } from "@/lib/friends-hub-data";
+import { loadListeningQueue } from "@/lib/listening-queue-data";
 import { redirect } from "next/navigation";
 
 export default async function FriendsPage() {
@@ -13,6 +14,7 @@ export default async function FriendsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const queuePromise = loadListeningQueue(supabase, user.id).catch(() => []);
   const { data, error } = await supabase
     .from("friendships")
     .select(
@@ -40,13 +42,14 @@ export default async function FriendsPage() {
     }
   }
 
+  const savedQueue = Object.fromEntries((await queuePromise).map((row) => [row.album_id, row.status]));
   return (
     <div className="space-y-7">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div><h1 className="font-serif text-3xl font-bold tracking-tight text-ink">Friends</h1><p className="mt-1 text-sm text-muted">Good records. Familiar faces. A few differences of opinion.</p></div>
         <div className="flex flex-wrap gap-2"><a href="#your-friends" className="btn btn-ghost">Your circle · {people.length}</a>{rows.some((row) => row.status === "pending" && row.friend_id === user.id) && <a href="#your-friends" className="btn btn-primary">Friend requests</a>}<a href="#find-friends" className="btn btn-outline">Add a friend</a></div>
       </header>
-      <FriendsHub data={hub} friendCount={people.length} unavailable={insightsUnavailable} />
+      <FriendsHub data={hub} friendCount={people.length} unavailable={insightsUnavailable} savedQueue={savedQueue} />
       <div id="your-friends" className="scroll-mt-24 space-y-4">
         {error ? <p role="status" className="text-sm text-accent">Your friends couldn&apos;t load. Reload to try again.</p> : <FriendsLists rows={rows} meId={user.id} insights={hub.insights} />}
       </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export function LibraryModeSwitch({ active }: { active: "albums" | "songs" }) {
+export function LibraryModeSwitch({ active }: { active: "albums" | "songs" | "queue" }) {
   return (
     <nav
       aria-label="Library type"
@@ -27,6 +27,7 @@ export function LibraryModeSwitch({ active }: { active: "albums" | "songs" }) {
       >
         Songs
       </Link>
+      <Link href="/queue" aria-current={active === "queue" ? "page" : undefined} className={cn("rounded-full px-4 py-1.5 text-sm transition-colors", active === "queue" ? "bg-surface text-ink shadow-[var(--shadow-soft)]" : "text-muted hover:text-ink")}>Queue</Link>
     </nav>
   );
 }

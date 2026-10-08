@@ -40,6 +40,7 @@ export function BottomNav({ unreadCount }: { unreadCount: number }) {
       return (
         pathname.startsWith("/albums") ||
         pathname.startsWith("/songs") ||
+        pathname.startsWith("/queue") ||
         (pathname.startsWith("/album/") && pathname !== "/album/new")
       );
     }

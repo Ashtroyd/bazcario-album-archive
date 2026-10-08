@@ -134,6 +134,7 @@ export default async function DashboardPage() {
       </header>
 
       <ContinueRatingHero item={continueItem} />
+      <Link href="/queue" className="surface-panel flex items-center justify-between gap-4 p-4 sm:p-5"><div><h2 className="font-serif text-lg font-semibold text-ink">Your next listens</h2><p className="text-sm text-muted">Saved albums and the records you’re listening to.</p></div><span className="shrink-0 text-sm text-accent">Open queue →</span></Link>
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-4">
