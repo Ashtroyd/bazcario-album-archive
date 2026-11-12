@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
 import { SongRatingsManager } from "@/components/SongRatingsManager";
 import { createClient } from "@/lib/supabase/server";
 import { getMySongRatings } from "@/lib/songRatings";
+
+export const metadata: Metadata = { title: "Songs" };
 
 export default async function SongsPage() {
   const supabase = await createClient();

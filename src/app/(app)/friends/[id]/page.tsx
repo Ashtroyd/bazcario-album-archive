@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getProfileName, titled } from "@/lib/page-metadata";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +16,15 @@ import {
   monthParam,
 } from "@/lib/monthlyFavorites";
 import type { Album, Profile } from "@/lib/types";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return titled((await getProfileName(id)) ?? "Friend");
+}
 
 export default async function FriendProfilePage({
   params,

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { monthTitle, titled } from "@/lib/page-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -11,6 +13,16 @@ import {
   monthKey,
   monthParamToKey,
 } from "@/lib/monthlyFavorites";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ month: string }>;
+}): Promise<Metadata> {
+  const { month } = await params;
+  const label = monthTitle(month);
+  return titled(label ? `${label} favourites` : "Monthly favourites");
+}
 
 export default async function FavouritesMonthPage({
   params,

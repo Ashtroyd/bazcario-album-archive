@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { ActivityNotifications } from "@/components/ActivityNotifications";
 import { ActivityReleases } from "@/components/ActivityReleases";
 import { ActivityTabs, type ActivityView } from "@/components/ActivityTabs";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = { title: "Activity" };
 
 export default async function ActivityPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const { view } = await searchParams;

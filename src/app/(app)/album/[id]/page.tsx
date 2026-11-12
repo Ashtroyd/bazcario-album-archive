@@ -1,10 +1,13 @@
+import type { Metadata } from "next";
+import { albumTitle, getAlbumHeading, titled } from "@/lib/page-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/Avatar";
-import { CoverImage } from "@/components/CoverImage";
+import { COVER_SIZES, CoverImage } from "@/components/CoverImage";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { TrackRatingTable } from "@/components/TrackRatingTable";
+import type { CommentRow } from "@/components/CommentsThread";
 import { RatingMetaForm } from "@/components/RatingMetaForm";
 import { Comments } from "@/components/Comments";
 import { AlbumActionsMenu } from "@/components/AlbumActionsMenu";
@@ -31,6 +34,15 @@ type OtherRater = {
 type AlbumWithCreator = Album & {
   profiles: { display_name: string | null; avatar_url: string | null } | null;
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return titled(albumTitle(await getAlbumHeading(id)));
+}
 
 export default async function AlbumDetailPage({
   params,
@@ -108,6 +120,32 @@ export default async function AlbumDetailPage({
     friendScoreMap.set(ftr.track_id, arr);
   }
 
+  // Track-level comments for every track on this album, in one query.
+  const commentsByTrack = new Map<string, CommentRow[]>();
+  if (trackIds.length > 0) {
+    const { data } = await supabase
+      .from("comments")
+      .select("id, body, created_at, user_id, target_id, author:profiles(display_name, avatar_url)")
+      .eq("target_type", "track")
+      .in("target_id", trackIds)
+      .order("created_at", { ascending: true });
+    for (const row of (data ?? []) as unknown as (CommentRow & { target_id: string })[]) {
+      const list = commentsByTrack.get(row.target_id) ?? [];
+      list.push(row);
+      commentsByTrack.set(row.target_id, list);
+    }
+  }
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url")
+    .eq("id", user!.id)
+    .maybeSingle();
+  const viewer = {
+    id: user!.id,
+    name: (viewerProfile?.display_name as string | null) ?? null,
+    avatar: (viewerProfile?.avatar_url as string | null) ?? null,
+  };
+
   const { data: othersData } = await supabase
     .from("ratings")
     .select("user_id, overall_rating, profiles(display_name, avatar_url)")
@@ -125,6 +163,7 @@ export default async function AlbumDetailPage({
       replay: (tr?.replay_value ?? null) as ReplayValue | null,
       notes: tr?.notes ?? null,
       friends: friendScoreMap.get(t.id) ?? [],
+      comments: commentsByTrack.get(t.id) ?? [],
     };
   });
 
@@ -178,6 +217,8 @@ export default async function AlbumDetailPage({
           <CoverImage
             url={a.cover_image_url}
             alt={a.title}
+            sizes={COVER_SIZES.hero}
+            priority
             className="aspect-square w-44 rounded-2xl shadow-2xl sm:w-56"
           />
           <h1
@@ -314,7 +355,12 @@ export default async function AlbumDetailPage({
             <p className="text-sm text-muted">This album has no tracks yet.</p>
           ) : (
             <div className="card">
-              <TrackRatingTable albumId={a.id} tracks={tableTracks} />
+              <TrackRatingTable
+                albumId={a.id}
+                tracks={tableTracks}
+                viewer={viewer}
+                revalidate={`/album/${a.id}`}
+              />
               <p className="mt-2 text-xs text-muted">
                 Your overall updates automatically as you rate tracks.
               </p>

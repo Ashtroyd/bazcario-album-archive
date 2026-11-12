@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
@@ -10,6 +11,8 @@ import {
   monthKey,
   monthParam,
 } from "@/lib/monthlyFavorites";
+
+export const metadata: Metadata = { title: "Monthly favourites" };
 
 export default async function FavouritesPage() {
   const user = await requireUser();
