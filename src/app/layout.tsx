@@ -16,7 +16,10 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Bazcario's Album Archive",
+  title: {
+    default: "Bazcario's Album Archive",
+    template: "%s · Album Archive",
+  },
   description:
     "Rate albums track-by-track, sync across devices, and compare scores with friends.",
   manifest: "/manifest.webmanifest",

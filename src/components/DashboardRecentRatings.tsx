@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CoverImage } from "@/components/CoverImage";
+import { COVER_SIZES, CoverImage } from "@/components/CoverImage";
 import { formatScore } from "@/lib/utils";
 
 export type DashboardRecentItem = {
@@ -25,7 +25,7 @@ export function DashboardRecentRatings({ items }: { items: DashboardRecentItem[]
           style={{ animationDelay: `${index * 45}ms` }}
         >
           <div className="relative overflow-hidden rounded-2xl bg-ivory shadow-[0_5px_18px_rgba(38,37,33,0.13)] transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgba(38,37,33,0.2)] motion-reduce:transform-none">
-            <CoverImage
+            <CoverImage sizes={COVER_SIZES.grid}
               url={item.coverUrl}
               alt=""
               className="aspect-square w-full transition-transform duration-500 group-hover:scale-[1.035] motion-reduce:transform-none"

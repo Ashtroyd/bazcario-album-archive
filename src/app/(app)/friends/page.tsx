@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AddFriendSearch } from "@/components/AddFriendSearch";
 import { FriendsLists, type FriendshipRow } from "@/components/FriendsLists";
@@ -6,6 +7,8 @@ import { buildFriendsHub } from "@/lib/friends-hub";
 import { loadHubRatings } from "@/lib/friends-hub-data";
 import { loadListeningQueue } from "@/lib/listening-queue-data";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = { title: "Friends" };
 
 export default async function FriendsPage() {
   const supabase = await createClient();

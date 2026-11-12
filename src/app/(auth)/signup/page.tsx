@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { signup } from "@/app/actions/auth";
+
+export const metadata: Metadata = { title: "Sign up" };
 
 export default async function SignupPage({
   searchParams,

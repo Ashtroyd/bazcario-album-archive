@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createAlbum, lookupCover } from "@/app/actions/albums";
-import { CoverImage } from "@/components/CoverImage";
+import { COVER_SIZES, CoverImage } from "@/components/CoverImage";
 
 type Suggestion = {
   id: number;
@@ -167,6 +167,7 @@ export function AddAlbumForm() {
         {/* Cover column */}
         <div className="space-y-2">
           <CoverImage
+            sizes={COVER_SIZES.grid}
             url={cover}
             alt="cover preview"
             className="aspect-square w-full rounded-xl"

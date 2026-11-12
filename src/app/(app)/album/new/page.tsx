@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { AddAlbumForm } from "@/components/AddAlbumForm";
+
+export const metadata: Metadata = { title: "Add album" };
 
 export default async function NewAlbumPage({
   searchParams,

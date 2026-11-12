@@ -1,7 +1,8 @@
 # 🎧 Bazcario's Album Archive
 
 **Live at [bazcario-album-archive.vercel.app](https://bazcario-album-archive.vercel.app)**
-— pushes to `main` deploy automatically.
+— pushes to `main` deploy automatically. GitHub Actions CI type-checks, lints,
+tests and builds every push.
 
 A full-stack web app that replaces a personal album-rating spreadsheet. Rate
 albums **track-by-track**, sync across devices via accounts, friend other users,
@@ -33,7 +34,15 @@ Built with **Next.js 16 (App Router) + React 19 + TypeScript**, **Supabase**
   friend's profile and scores (gated by RLS).
 - **Compare** — you vs. a friend, track-by-track, with the biggest rating gaps
   highlighted.
-- **Comments** — per album (schema supports per-track / per-rating too).
+- **Comments** — per album and per track (open "Comment" under any track).
+- **Stats** — score distributions, averages by genre and decade, most-rated
+  artists, replay-value mix, and your highest/lowest scores (Account menu →
+  Stats).
+- **Export** — download your own ratings as CSV (one row per track) or Excel
+  (Albums, Tracks and Songs sheets) from the Stats page.
+- **Notifications** — friend requests, comments on albums or tracks you created
+  or rated, friends rating albums you've rated, and a call-out when their score
+  is 2+ points away from yours.
 - **Profile** — avatar upload, display name, and stats (avg rating, top genre).
 - **Spotify extension** — rate the currently playing track, set replay value,
   and write notes directly inside Spotify through Spicetify, either as part of

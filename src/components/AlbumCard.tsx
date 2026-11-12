@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { CoverImage } from "@/components/CoverImage";
+import { COVER_SIZES, CoverImage } from "@/components/CoverImage";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { formatScore } from "@/lib/utils";
 import type { Album } from "@/lib/types";
@@ -78,7 +78,7 @@ export function AlbumCard({
       className="surface-item group flex flex-col overflow-hidden duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lifted)]"
     >
       <div className="relative aspect-square w-full">
-        <CoverImage
+        <CoverImage sizes={COVER_SIZES.grid}
           url={album.cover_image_url}
           alt={`${album.title} cover`}
           className="h-full w-full transition duration-300 group-hover:scale-[1.04]"

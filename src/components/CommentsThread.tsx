@@ -6,7 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { formatDate } from "@/lib/utils";
 import type { CommentTarget } from "@/lib/types";
 
-type CommentRow = {
+export type CommentRow = {
   id: string;
   body: string;
   created_at: string;
@@ -33,12 +33,15 @@ export function CommentsThread({
   targetId,
   revalidate,
   me,
+  placeholder = "Add a comment…",
 }: {
   initialComments: CommentRow[];
   targetType: CommentTarget;
   targetId: string;
   revalidate: string;
   me: { id: string; name: string | null; avatar: string | null };
+  /** Placeholder for the input, e.g. "Comment on this track…". */
+  placeholder?: string;
 }) {
   const [comments, applyOptimistic] = useOptimistic(initialComments, reducer);
   const [, startTransition] = useTransition();
@@ -90,7 +93,7 @@ export function CommentsThread({
           name="body"
           required
           maxLength={2000}
-          placeholder="Add a comment…"
+          placeholder={placeholder}
           aria-label="Comment"
           autoComplete="off"
           className="input"

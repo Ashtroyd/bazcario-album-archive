@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CoverImage } from "@/components/CoverImage";
+import { COVER_SIZES, CoverImage } from "@/components/CoverImage";
 import { formatScore } from "@/lib/utils";
 import type { Album } from "@/lib/types";
 
@@ -37,7 +37,7 @@ export function ContinueRatingHero({ item }: { item: ContinueAlbum | null }) {
       {item ? (
         <div className="relative grid items-center gap-6 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-8">
           <div className="group mx-auto w-full max-w-44 sm:max-w-none">
-            <CoverImage
+            <CoverImage sizes={COVER_SIZES.hero}
               url={item.album.cover_image_url}
               alt={`${item.album.title} cover`}
               priority

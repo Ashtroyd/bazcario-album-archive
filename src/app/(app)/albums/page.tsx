@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -10,6 +11,11 @@ import { LibraryFilters } from "@/components/LibraryFilters";
 import { LibraryModeSwitch } from "@/components/LibraryModeSwitch";
 import type { Album } from "@/lib/types";
 
+export const metadata: Metadata = { title: "Library" };
+
+/** Albums rendered per page of the Library grid. */
+const PAGE_SIZE = 24;
+
 export default async function LibraryPage({
   searchParams,
 }: {
@@ -20,6 +26,7 @@ export default async function LibraryPage({
     sort?: string;
     scope?: string;
     rating?: string;
+    page?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -157,6 +164,22 @@ export default async function LibraryPage({
     list = [...list].sort(
       (a, b) => (b.release_year ?? 0) - (a.release_year ?? 0),
     );
+
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  const requestedPage = Number.parseInt(sp.page ?? "1", 10);
+  const page = Number.isFinite(requestedPage)
+    ? Math.min(Math.max(requestedPage, 1), pageCount)
+    : 1;
+  const pageItems = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageHref = (nextPage: number) => {
+    const params = new URLSearchParams();
+    for (const key of ["scope", "rating", "q", "genre", "year", "sort"] as const) {
+      if (sp[key]) params.set(key, sp[key]!);
+    }
+    if (nextPage > 1) params.set("page", String(nextPage));
+    const query = params.toString();
+    return query ? `/albums?${query}` : "/albums";
+  };
 
   const scopeCopy: Record<AlbumScope, string> = {
     mine: "Albums you’ve started rating. Every score and note here belongs to your account.",
@@ -296,14 +319,40 @@ export default async function LibraryPage({
           )}
         </div>
       ) : (
-        <div
-          key={`${scope}-${ratingFilter}`}
-          className="animate-scope-in grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
-        >
-          {list.map((a) => (
-            <AlbumCard key={a.id} album={a} rating={cardRating(a.id)} />
-          ))}
-        </div>
+        <>
+          <div
+            key={`${scope}-${ratingFilter}`}
+            className="animate-scope-in grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+          >
+            {pageItems.map((a) => (
+              <AlbumCard key={a.id} album={a} rating={cardRating(a.id)} />
+            ))}
+          </div>
+          {pageCount > 1 && (
+            <nav
+              aria-label="Library pages"
+              className="flex items-center justify-between gap-3 pt-2"
+            >
+              {page > 1 ? (
+                <Link href={pageHref(page - 1)} className="btn btn-outline" rel="prev">
+                  ← Previous
+                </Link>
+              ) : (
+                <span aria-hidden="true" />
+              )}
+              <p className="text-sm text-muted" aria-current="page">
+                Page {page} of {pageCount}
+              </p>
+              {page < pageCount ? (
+                <Link href={pageHref(page + 1)} className="btn btn-outline" rel="next">
+                  Next →
+                </Link>
+              ) : (
+                <span aria-hidden="true" />
+              )}
+            </nav>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Avatar } from "./Avatar";
-import { CoverImage } from "./CoverImage";
+import { COVER_SIZES, CoverImage } from "./CoverImage";
 import { ScoreBadge } from "./ScoreBadge";
 import { formatScore, timeAgo } from "@/lib/utils";
 import type { FriendsHub as HubData, CircleAlbum } from "@/lib/friends-hub";
@@ -29,7 +29,7 @@ export function FriendsHub({ data, friendCount, unavailable = false, savedQueue 
         {hasDiscovery ? <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {data.discoveries.map((pick, index) => <div key={pick.album.id} className="min-w-0"><Link href={`/album/${pick.album.id}`} className="group block min-w-0">
             <div className="relative aspect-square overflow-hidden rounded-xl bg-ivory shadow-[var(--shadow-soft)]">
-              <CoverImage url={pick.album.cover_image_url} alt={`${pick.album.title} cover`} priority={index < 2} className="h-full w-full transition-transform duration-300 motion-reduce:transition-none group-hover:scale-[1.03]" />
+              <CoverImage sizes={COVER_SIZES.grid} url={pick.album.cover_image_url} alt={`${pick.album.title} cover`} priority={index < 2} className="h-full w-full transition-transform duration-300 motion-reduce:transition-none group-hover:scale-[1.03]" />
               <span className="absolute right-2 bottom-2 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-paper">{formatScore(pick.average)}<span className="font-normal text-paper/65"> / 10</span></span>
             </div>
             <p className="mt-2 truncate text-sm font-semibold text-ink">{pick.album.title}</p>

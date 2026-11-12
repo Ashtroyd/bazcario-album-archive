@@ -6,7 +6,7 @@ import { IconComment, IconStar } from "@/components/icons";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { getNotifications } from "@/lib/notifications";
 import { createClient } from "@/lib/supabase/server";
-import { cn, timeAgo } from "@/lib/utils";
+import { cn, formatScore, timeAgo } from "@/lib/utils";
 
 export async function ActivityNotifications({ userId }: { userId: string }) {
   const supabase = await createClient();
@@ -56,7 +56,7 @@ export async function ActivityNotifications({ userId }: { userId: string }) {
             {items.map((notification, index) => (
               <li key={notification.id} className="list-in" style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}>
                 <Link
-                  href={notification.kind === "compare" && notification.album
+                  href={notification.kind !== "comment" && notification.album
                     ? `/album/${notification.album.id}/compare/${notification.actor.id}`
                     : notification.album ? `/album/${notification.album.id}` : "/"}
                   className={cn(
@@ -76,7 +76,13 @@ export async function ActivityNotifications({ userId }: { userId: string }) {
                     <p className="text-sm">
                       <span className="font-medium">{notification.actor.name ?? "A friend"}</span>{" "}
                       {notification.kind === "comment" ? (
-                        <>commented on <span className="font-medium">{notification.album?.title}</span></>
+                        notification.trackName ? (
+                          <>commented on <span className="font-medium">{notification.trackName}</span> from <span className="font-medium">{notification.album?.title}</span></>
+                        ) : (
+                          <>commented on <span className="font-medium">{notification.album?.title}</span></>
+                        )
+                      ) : notification.kind === "disagree" ? (
+                        <>disagrees with you on <span className="font-medium">{notification.album?.title}</span> — you gave it {formatScore(notification.myScore)}</>
                       ) : (
                         <>rated <span className="font-medium">{notification.album?.title}</span> — tap to compare</>
                       )}
@@ -84,7 +90,7 @@ export async function ActivityNotifications({ userId }: { userId: string }) {
                     {notification.text ? <p className="truncate text-xs text-muted">&ldquo;{notification.text}&rdquo;</p> : null}
                     <p className="text-[11px] text-muted">{timeAgo(notification.at)}</p>
                   </div>
-                  {notification.kind === "compare" && notification.score != null ? (
+                  {notification.kind !== "comment" && notification.score != null ? (
                     <ScoreBadge score={notification.score} className="shrink-0" />
                   ) : null}
                   {notification.album?.cover ? (

@@ -68,6 +68,9 @@ export function AccountMenu({
             <MenuLink href="/profile" onSelect={() => setOpen(false)}>
               Profile
             </MenuLink>
+            <MenuLink href="/stats" onSelect={() => setOpen(false)}>
+              Stats
+            </MenuLink>
             <MenuLink href="/favourites" onSelect={() => setOpen(false)}>
               Monthly favourites
             </MenuLink>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/lib/auth";
@@ -6,8 +7,11 @@ import { ProfileSettingsCard } from "@/components/ProfileSettingsCard";
 import { PasswordSettingsCard } from "@/components/PasswordSettingsCard";
 import { SpotifyExtensionCard } from "@/components/SpotifyExtensionCard";
 import { MonthlyFavoritesMonthSection } from "@/components/MonthlyFavoritesMonthSection";
-import { cn, formatScore } from "@/lib/utils";
+import { StatBars } from "@/components/StatBars";
+import { formatScore } from "@/lib/utils";
 import type { ExtensionAccessToken } from "@/lib/types";
+
+export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -144,6 +148,7 @@ export default async function ProfilePage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-ink">Profile</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <Link href="/stats" className="btn btn-outline text-sm">Stats</Link>
           <Link href="/recap" className="btn btn-outline text-sm">Monthly recap</Link>
           <Link href="/favourites" className="btn btn-outline text-sm">
             Favourite songs
@@ -187,7 +192,7 @@ export default async function ProfilePage() {
                 Your rating distribution
               </h2>
               {trackScores.length > 0 ? (
-                <Bars data={distribution} colorClass="bg-accent" />
+                <StatBars data={distribution} colorClass="bg-accent" />
               ) : (
                 <p className="text-sm text-muted">
                   Rate some tracks to see this.
@@ -197,7 +202,7 @@ export default async function ProfilePage() {
             <div className="card">
               <h2 className="mb-3 text-sm font-semibold text-ink">Top genres</h2>
               {topGenres.length > 0 ? (
-                <Bars data={topGenres} colorClass="bg-sage" />
+                <StatBars data={topGenres} colorClass="bg-sage" />
               ) : (
                 <p className="text-sm text-muted">No genres yet.</p>
               )}
@@ -229,34 +234,6 @@ export default async function ProfilePage() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function Bars({
-  data,
-  colorClass = "bg-accent",
-}: {
-  data: { label: string; value: number }[];
-  colorClass?: string;
-}) {
-  const max = Math.max(1, ...data.map((d) => d.value));
-  return (
-    <div className="space-y-1.5">
-      {data.map((d) => (
-        <div key={d.label} className="flex items-center gap-2 text-xs">
-          <span className="w-14 shrink-0 truncate text-right text-muted">
-            {d.label}
-          </span>
-          <div className="h-4 flex-1 overflow-hidden rounded bg-ivory">
-            <div
-              className={cn("h-full rounded", colorClass)}
-              style={{ width: `${(d.value / max) * 100}%` }}
-            />
-          </div>
-          <span className="w-6 shrink-0 text-muted">{d.value}</span>
-        </div>
-      ))}
     </div>
   );
 }
