@@ -38,45 +38,44 @@ export async function checkArtistReleases(
 
   const result: ReleaseCheckResult = { artists: artists.size, added: 0, failures: [] };
 
-  // Artists are independent, so check them in parallel.
-  await Promise.all(
-    [...artists].map(async ([artistId, name]) => {
-      let albums;
-      try {
-        albums = await getArtistAlbums(artistId);
-      } catch (err) {
-        result.failures.push(`${name}: ${err instanceof Error ? err.message : String(err)}`);
-        return;
-      }
-      if (!albums.length) return;
+  // One artist at a time: Spotify answers bursts of parallel requests with
+  // 503s, and with a handful of artists this still finishes in seconds.
+  for (const [artistId, name] of artists) {
+    let albums;
+    try {
+      albums = await getArtistAlbums(artistId);
+    } catch (err) {
+      result.failures.push(`${name}: ${err instanceof Error ? err.message : String(err)}`);
+      continue;
+    }
+    if (!albums.length) continue;
 
-      // One lookup per artist instead of one per album.
-      const { data: existing } = await supabase
-        .from("artist_releases")
-        .select("spotify_album_id")
-        .in("spotify_album_id", albums.map((a) => a.id));
-      const known = new Set((existing ?? []).map((r) => r.spotify_album_id as string));
+    // One lookup per artist instead of one per album.
+    const { data: existing } = await supabase
+      .from("artist_releases")
+      .select("spotify_album_id")
+      .in("spotify_album_id", albums.map((a) => a.id));
+    const known = new Set((existing ?? []).map((r) => r.spotify_album_id as string));
 
-      const fresh = albums
-        .filter((album) => !known.has(album.id))
-        .map((album) => ({
-          spotify_artist_id: artistId,
-          artist_name: name,
-          spotify_album_id: album.id,
-          title: album.name,
-          album_type: album.album_type,
-          release_date: normalizeReleaseDate(album.release_date),
-          cover_url: album.images[0]?.url ?? null,
-        }));
-      if (!fresh.length) return;
+    const fresh = albums
+      .filter((album) => !known.has(album.id))
+      .map((album) => ({
+        spotify_artist_id: artistId,
+        artist_name: name,
+        spotify_album_id: album.id,
+        title: album.name,
+        album_type: album.album_type,
+        release_date: normalizeReleaseDate(album.release_date),
+        cover_url: album.images[0]?.url ?? null,
+      }));
+    if (!fresh.length) continue;
 
-      const { error: insertError } = await supabase
-        .from("artist_releases")
-        .upsert(fresh, { onConflict: "spotify_album_id", ignoreDuplicates: true });
-      if (insertError) result.failures.push(`${name}: ${insertError.message}`);
-      else result.added += fresh.length;
-    }),
-  );
+    const { error: insertError } = await supabase
+      .from("artist_releases")
+      .upsert(fresh, { onConflict: "spotify_album_id", ignoreDuplicates: true });
+    if (insertError) result.failures.push(`${name}: ${insertError.message}`);
+    else result.added += fresh.length;
+  }
 
   return result;
 }

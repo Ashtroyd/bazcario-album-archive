@@ -4,8 +4,20 @@
  * for disambiguation) and release checking.
  */
 let cachedToken: { value: string; expiresAt: number } | null = null;
+// Concurrent callers share one in-flight token request.
+let pendingToken: Promise<string> | null = null;
 
-async function getAccessToken(): Promise<string> {
+function getAccessToken(): Promise<string> {
+  if (cachedToken && cachedToken.expiresAt > Date.now()) {
+    return Promise.resolve(cachedToken.value);
+  }
+  pendingToken ??= fetchAccessToken().finally(() => {
+    pendingToken = null;
+  });
+  return pendingToken;
+}
+
+async function fetchAccessToken(): Promise<string> {
   // Read lazily (not at module top-level) so this works regardless of
   // whether env vars are injected by the runtime (Next.js, GitHub Actions)
   // or loaded via dotenv in a standalone script — ES module imports are
@@ -16,10 +28,6 @@ async function getAccessToken(): Promise<string> {
   if (!clientId || !clientSecret) {
     throw new Error("Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET in environment");
   }
-  if (cachedToken && cachedToken.expiresAt > Date.now()) {
-    return cachedToken.value;
-  }
-
   const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
@@ -43,9 +51,20 @@ async function getAccessToken(): Promise<string> {
 
 async function spotifyFetch<T>(path: string): Promise<T> {
   const token = await getAccessToken();
-  const res = await fetch(`https://api.spotify.com/v1${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const request = () =>
+    fetch(`https://api.spotify.com/v1${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  let res = await request();
+  // One retry for rate limits and transient 5xx (e.g. "503 Turnstile").
+  if (res.status === 429 || res.status >= 500) {
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+      ? Math.min(retryAfter * 1000, 5000)
+      : 1000;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    res = await request();
+  }
 
   if (!res.ok) {
     throw new Error(`Spotify API error: ${res.status} ${await res.text()}`);
