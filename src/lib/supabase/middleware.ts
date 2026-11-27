@@ -11,6 +11,8 @@ const PUBLIC_PATHS = [
   // Spicetify authenticates with a restricted bearer token in each handler,
   // not the browser's Supabase cookie.
   "/api/extension",
+  // Scheduled jobs check their own CRON_SECRET bearer token.
+  "/api/cron",
 ];
 
 function isPublic(pathname: string) {

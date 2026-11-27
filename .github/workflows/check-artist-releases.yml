@@ -1,8 +1,10 @@
 name: Check artist releases
 
+# Backup only. The main 30-minute schedule is Supabase pg_cron calling
+# /api/cron/check-releases; GitHub delays scheduled runs on small repos.
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "17 4 * * *"
   workflow_dispatch: {}
 
 jobs:
